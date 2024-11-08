@@ -15,11 +15,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.sportify.ui.theme.SportifyTheme
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+
+private lateinit var auth: FirebaseAuth
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        auth = Firebase.auth
+        val currentUser = auth.currentUser
+        val startDestination = if (currentUser != null) "home" else "login"
         setContent {
             SportifyTheme {
                 val navController =  rememberNavController()

@@ -12,7 +12,20 @@
           "package_name": "com.example.sportify"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "260946762531-1iqee5b5f6st9it10lfhg5e8qubrcsje.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.sportify",
+            "certificate_hash": "651cf5778cf85d64f62a4c825d90d80b7d8e6269"
+          }
+        },
+        {
+          "client_id": "260946762531-42vddi2dunhlbofnd57fnp4pr2nvta1v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAUtbRHTz4eMshh9GA5_GLjMmMocYhailA"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "260946762531-42vddi2dunhlbofnd57fnp4pr2nvta1v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -1,6 +1,12 @@
 package com.example.sportify
 
-import androidx.compose.foundation.BorderStroke
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Context
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,23 +24,22 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -46,15 +51,114 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.sportify.ui.theme.SportifyTheme
-import kotlin.math.log
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.GoogleAuthProvider
+
+private lateinit var auth: FirebaseAuth
+private lateinit var googleSignInClient: GoogleSignInClient
+
+
+fun SignIn(email: String, pass: String, nContext: Context, navCtrl: NavController){
+    auth = Firebase.auth
+    auth.signInWithEmailAndPassword(email, pass)
+        .addOnCompleteListener{ task ->
+            if(task.isSuccessful){
+                val user = auth.currentUser?.email
+                Toast.makeText(
+                    nContext,
+                    user.toString(),
+                    Toast.LENGTH_SHORT
+                ).show()
+                navCtrl.navigate("home")
+            }
+            else{
+                Toast.makeText(
+                    nContext,
+                    "Autentikasi gagal.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+}
+@Composable
+fun GoogleSignInAuth(account: GoogleSignInAccount, navCtrl: NavController, activity: Activity){
+        if (account != null) {
+            val idToken = account.idToken
+            if (idToken != null) {
+                val credential = GoogleAuthProvider.getCredential(idToken, null)
+                auth.signInWithCredential(credential)
+                    .addOnCompleteListener(activity) { tasks ->
+                        if (tasks.isSuccessful) {
+                            Log.d("GoogleSignIn", "Login dengan google: berhasil!")
+                            navCtrl.navigate("home")
+                        } else {
+                            Log.w("GoogleSignIn", "Login dengan google: gagal!", tasks.exception)
+                            Toast.makeText(activity, "Autentikasi Gagal.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+            } else {
+                Toast.makeText(activity, "Google Sign-In gagal.", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(activity, "Sign-In gagal.", Toast.LENGTH_SHORT).show()
+        }
+}
 
 @Composable
 fun LoginLayout(
     modifier: Modifier = Modifier,
     navCtrl: NavController
 ) {
+    fun GoogleSignInAuth(account: GoogleSignInAccount, navCtrl: NavController, activity: Activity){
+        if (account != null) {
+            val idToken = account.idToken
+            if (idToken != null) {
+                val credential = GoogleAuthProvider.getCredential(idToken, null)
+                auth.signInWithCredential(credential)
+                    .addOnCompleteListener(activity) { tasks ->
+                        if (tasks.isSuccessful) {
+                            Log.d("GoogleSignIn", "Login dengan google: berhasil!")
+                            navCtrl.navigate("home")
+                        } else {
+                            Log.w("GoogleSignIn", "Login dengan google: gagal!", tasks.exception)
+                            Toast.makeText(activity, "Autentikasi Gagal.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+            } else {
+                Toast.makeText(activity, "Google Sign-In gagal.", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(activity, "Sign-In gagal.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     var email by remember { mutableStateOf("")}
     var password by remember { mutableStateOf("")}
+    val nContext = LocalContext.current
+
+    LaunchedEffect(Unit){
+        auth = Firebase.auth
+
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(R.string.default_web_client_id.toString())
+            .requestEmail()
+            .build()
+
+        googleSignInClient = GoogleSignIn.getClient(nContext, gso)
+    }
+
+    val signInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        GoogleSignInAuth(account = task.result,navCtrl = navCtrl, activity = nContext as Activity)
+    }
     Box (
         Modifier
             .fillMaxSize()
@@ -132,14 +236,22 @@ fun LoginLayout(
             )
             Button(
                 onClick = {
-                /*TODO*/
+                    if (email.isNotEmpty() && password.isNotEmpty()){
+                        SignIn(email, password, nContext, navCtrl)
+                    }
+                    else{
+                        Toast.makeText(
+                            nContext,
+                            "Data belum terisi dengan benar",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 },
                 Modifier
                     .padding(top = 20.dp)
                     .padding(horizontal = 30.dp)
                     .fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(Color(0xFFBEF0FF))
-
             ) {
                 Text(
                     text = "LOGIN",
@@ -165,10 +277,8 @@ fun LoginLayout(
             )
             Button(
                 onClick = {
-//                        if (signInLauncher != null) {
-//                            val signInIntent = googleSignInClient.signInIntent
-//                            signInLauncher?.launch(signInIntent)
-//                        }
+                    val signInIntent =  googleSignInClient.signInIntent
+                    signInLauncher.launch(signInIntent)
                 },
                 Modifier
                     .fillMaxWidth()
