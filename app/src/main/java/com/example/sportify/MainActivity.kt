@@ -31,9 +31,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             SportifyTheme {
                 val navController =  rememberNavController()
-                NavHost(navController = navController, startDestination = "login") {
+                NavHost(navController = navController, startDestination = startDestination) {
                     composable("login") { LoginLayout(navCtrl = navController) }
                     composable("register") { RegisterLayout(navCtrl = navController) }
+                    composable("home") { HomeLayout(modifier = Modifier, navCtrl = navController) }
+                    composable("schedule") { ScheduleLayout(navCtrl = navController) }
                 }
             }
         }
