@@ -75,53 +75,44 @@ private lateinit var googleSignInClient: GoogleSignInClient
 private lateinit var database: FirebaseDatabase;
 
 @Composable
-fun HomeLayout(modifier: Modifier, navCtrl: NavController) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
+fun HomeLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
+    Scaffold(
+        topBar = { FloatingSearchBarLayout() },
+        bottomBar = {
+            BottomNavigationBar(
+                navController = navCtrl,
+                index = 0
+            )
+        },
+        content = { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
 
-        FloatingSearchBarLayout()
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 20.dp)
+                ) {
+                    item { Spacer(modifier = Modifier.height(16.dp)) }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 160.dp)
-        ) {
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+                    // Field types section
+                    item { FieldTypeSection() }
+                    item { Spacer(modifier = Modifier.height(16.dp)) }
 
-            // Jenis Lapangan
-            item {
-                FieldTypeSection()
-            }
+                    // Available fields section
+                    item { AvailableFieldsSection() }
+                    item { Spacer(modifier = Modifier.height(16.dp)) }
 
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            // Lapangan yang tersedia
-            item {
-                AvailableFieldsSection()
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            // User's booking
-            item {
-                UserBookingSection()
+                    // User's booking section
+                    item { UserBookingSection() }
+                }
             }
         }
-        BottomNavigationBar(
-            modifier = Modifier
-                .align(Alignment.BottomCenter),
-            navController = navCtrl,
-            index = 0
-        )
-    }
+    )
 }
 
 @Composable

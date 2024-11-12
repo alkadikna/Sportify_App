@@ -27,6 +27,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -51,18 +52,24 @@ import com.example.sportify.ui.theme.SportifyTheme
 
 @Composable
 fun ScheduleLayout(navCtrl: NavController){
-    Box(modifier = Modifier
-        .fillMaxSize()
-    ){
-        FloatingDropDown()
-        BottomNavigationBar(
-            modifier = Modifier
-                .align(Alignment.BottomCenter),
-            navController = navCtrl,
-            index = 1
-        )
+    Scaffold (
+        topBar = { FloatingDropDown() },
+        bottomBar = {
+            BottomNavigationBar(
+                navController = navCtrl,
+                index = 1
+            )
+        },
+        content = { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
 
-    }
+            }
+        }
+    )
 }
 
 @Composable
