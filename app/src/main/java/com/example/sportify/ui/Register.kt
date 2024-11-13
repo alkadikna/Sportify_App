@@ -1,6 +1,5 @@
-package com.example.sportify
+package com.example.sportify.ui
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.util.Log
@@ -50,23 +49,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.sportify.R
 import com.example.sportify.ui.theme.SportifyTheme
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 private lateinit var auth: FirebaseAuth
 private lateinit var googleSignInClient: GoogleSignInClient
 
 
-fun SignIn(email: String, pass: String, nContext: Context, navCtrl: NavController){
+fun signup(email: String, pass: String, nContext: Context, navCtrl: NavController){
     auth = Firebase.auth
-    auth.signInWithEmailAndPassword(email, pass)
+    auth.createUserWithEmailAndPassword(email, pass)
         .addOnCompleteListener{ task ->
             if(task.isSuccessful){
                 val user = auth.currentUser?.email
@@ -80,41 +80,23 @@ fun SignIn(email: String, pass: String, nContext: Context, navCtrl: NavControlle
             else{
                 Toast.makeText(
                     nContext,
-                    "Autentikasi gagal.",
+                    "Register gagal.",
                     Toast.LENGTH_SHORT
                 ).show()
             }
         }
 }
-@Composable
-fun GoogleSignInAuth(account: GoogleSignInAccount, navCtrl: NavController, activity: Activity){
-        if (account != null) {
-            val idToken = account.idToken
-            if (idToken != null) {
-                val credential = GoogleAuthProvider.getCredential(idToken, null)
-                auth.signInWithCredential(credential)
-                    .addOnCompleteListener(activity) { tasks ->
-                        if (tasks.isSuccessful) {
-                            Log.d("GoogleSignIn", "Login dengan google: berhasil!")
-                            navCtrl.navigate("home")
-                        } else {
-                            Log.w("GoogleSignIn", "Login dengan google: gagal!", tasks.exception)
-                            Toast.makeText(activity, "Autentikasi Gagal.", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-            } else {
-                Toast.makeText(activity, "Google Sign-In gagal.", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            Toast.makeText(activity, "Sign-In gagal.", Toast.LENGTH_SHORT).show()
-        }
-}
 
 @Composable
-fun LoginLayout(
+fun RegisterLayout(
     modifier: Modifier = Modifier,
     navCtrl: NavController
-) {
+    ) {
+    var email by remember { mutableStateOf("")}
+    var password by remember { mutableStateOf("")}
+    var repeatPass by remember { mutableStateOf("")}
+    val nContext = LocalContext.current
+
     fun GoogleSignInAuth(account: GoogleSignInAccount, navCtrl: NavController, activity: Activity){
         if (account != null) {
             val idToken = account.idToken
@@ -137,11 +119,6 @@ fun LoginLayout(
             Toast.makeText(activity, "Sign-In gagal.", Toast.LENGTH_SHORT).show()
         }
     }
-
-    var email by remember { mutableStateOf("")}
-    var password by remember { mutableStateOf("")}
-    val nContext = LocalContext.current
-
     LaunchedEffect(Unit){
         auth = Firebase.auth
 
@@ -159,6 +136,7 @@ fun LoginLayout(
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
         GoogleSignInAuth(account = task.result,navCtrl = navCtrl, activity = nContext as Activity)
     }
+
     Box (
         Modifier
             .fillMaxSize()
@@ -179,7 +157,7 @@ fun LoginLayout(
                 .fillMaxSize(),
             contentScale = ContentScale.Crop,
 
-        )
+            )
         Column {
             Image(
                 painter = painterResource(id = R.drawable.logo),
@@ -189,7 +167,7 @@ fun LoginLayout(
                     .align(Alignment.CenterHorizontally)
             )
             Text(
-                text = "Login",
+                text = "Register",
                 Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 30.dp),
@@ -234,15 +212,44 @@ fun LoginLayout(
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
+            TextField(
+                value = repeatPass,
+                onValueChange = {newPass -> repeatPass = newPass},
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 30.dp)
+                    .padding(top = 20.dp),
+                leadingIcon = {
+                    Image(painter = painterResource(id = R.drawable.group), contentDescription = null)
+                },
+                label = { Text(text = "Repeat Password")},
+                placeholder = { Text(text = "Masukkan Ulang Password Anda")},
+                shape = RoundedCornerShape(30.dp),
+                colors = TextFieldDefaults.colors(
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent
+                ),
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+            )
             Button(
                 onClick = {
-                    if (email.isNotEmpty() && password.isNotEmpty()){
-                        SignIn(email, password, nContext, navCtrl)
+                    if(email.isNotEmpty() && password.isNotEmpty()){
+                        if(password == repeatPass){
+                            signup(email, password, nContext, navCtrl)
+                        }
+                        else{
+                            Toast.makeText(
+                                nContext,
+                                "Tolong ulangi password dengan benar",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                     }
                     else{
                         Toast.makeText(
                             nContext,
-                            "Data belum terisi dengan benar",
+                            "Tolong isi semua data dengan benar",
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -252,23 +259,15 @@ fun LoginLayout(
                     .padding(horizontal = 30.dp)
                     .fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(Color(0xFFBEF0FF))
+
             ) {
                 Text(
-                    text = "LOGIN",
+                    text = "REGISTER",
                     color = Color.Black
                 )
             }
             Text(
-                text = "Lupa Password?",
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 30.dp)
-                    .padding(top = 20.dp)
-                    .clickable { },
-                textAlign = TextAlign.Right
-            )
-            Text(
-                text = "atau masuk dengan",
+                text = "atau daftar dengan",
                 Modifier
                     .fillMaxWidth()
                     .padding(top = 50.dp)
@@ -277,8 +276,10 @@ fun LoginLayout(
             )
             Button(
                 onClick = {
-                    val signInIntent =  googleSignInClient.signInIntent
-                    signInLauncher.launch(signInIntent)
+                    if (signInLauncher != null) {
+                        val signInIntent = googleSignInClient.signInIntent
+                        signInLauncher?.launch(signInIntent)
+                    }
                 },
                 Modifier
                     .fillMaxWidth()
@@ -308,16 +309,16 @@ fun LoginLayout(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Belum memiliki akun?",
+                    text = "Sudah memiliki akun?",
                     color = Color.Black,
                     textAlign = TextAlign.Center,
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 Text(
-                    text = "Register",
+                    text = "Login",
                     Modifier
                         .clickable {
-                            navCtrl.navigate("register")
+                            navCtrl.navigate("login")
                         },
                     color = Color.Black,
                     textAlign = TextAlign.Center,
@@ -334,6 +335,6 @@ fun LoginLayout(
 private fun LoginPrev() {
     SportifyTheme {
         val navCtrlr = rememberNavController()
-        LoginLayout(navCtrl = navCtrlr)
+        RegisterLayout(navCtrl = navCtrlr)
     }
 }
