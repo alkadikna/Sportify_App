@@ -17,16 +17,22 @@ import com.example.sportify.ui.ScheduleLayout
 import com.example.sportify.ui.theme.SportifyTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 
 private lateinit var auth: FirebaseAuth
+private lateinit var database: FirebaseDatabase
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         auth = Firebase.auth
+        database = FirebaseDatabase.getInstance("https://sportify-3eb54-default-rtdb.asia-southeast1.firebasedatabase.app")
         val currentUser = auth.currentUser
+        InitDb()
         val startDestination = if (currentUser != null) "home" else "login"
         setContent {
             SportifyTheme {
@@ -38,7 +44,7 @@ class MainActivity : ComponentActivity() {
                     composable("schedule") { ScheduleLayout(navCtrl = navController) }
                     composable("booking") { BookingLayout(navCtrl = navController)}
                 }
-                InitDb()
+
             }
         }
     }

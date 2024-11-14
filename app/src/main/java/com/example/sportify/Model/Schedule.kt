@@ -7,6 +7,7 @@ private lateinit var database: FirebaseDatabase
 private  lateinit var auth: FirebaseAuth
 
 class Schedule (
+    var date: String,
     var timeList: MutableList<Time>
 
 ){

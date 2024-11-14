@@ -1,5 +1,6 @@
 package com.example.sportify
 
+import android.util.Log
 import androidx.compose.ui.input.key.Key.Companion.T
 import com.example.sportify.Model.Field
 import com.example.sportify.Model.Time
@@ -52,7 +53,17 @@ fun deleteTime(time: Time){
 }
 
 fun create(newObject: Any, myRef: DatabaseReference){
-    myRef.setValue(newObject)
+    myRef.push().setValue(newObject)
+        .addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                Log.d("Firebase", "Data berhasil ditambahkan ke Firebase")
+            } else {
+                Log.e("Firebase", "Gagal menambahkan data", task.exception)
+            }
+        }
+        .addOnFailureListener { exception ->
+            Log.e("Firebase", "Error saat menambahkan data: ${exception.message}")
+        }
 }
 
 fun read(myRef: DatabaseReference, onComplete: (List<Any>) -> Unit)  {
