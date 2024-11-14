@@ -1,10 +1,13 @@
 package com.example.sportify
 
+import androidx.compose.ui.input.key.Key.Companion.T
 import com.example.sportify.Model.Field
 import com.example.sportify.Model.Time
 import com.google.android.gms.common.internal.Objects
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import kotlin.concurrent.timer
 
 private lateinit var database: FirebaseDatabase
 private  lateinit var auth: FirebaseAuth
@@ -47,3 +50,31 @@ fun deleteTime(time: Time){
     val myRef = database.getReference("time").child(auth.uid!!).child(time.id!!)
     myRef.removeValue()
 }
+
+fun create(newObject: Any, myRef: DatabaseReference){
+    myRef.setValue(newObject)
+}
+
+fun read(myRef: DatabaseReference, onComplete: (List<Any>) -> Unit)  {
+    myRef.get().addOnSuccessListener { dataSnapshot ->
+        if(dataSnapshot.exists()){
+           val timeList = mutableListOf<Any>()
+            for(Snapshot in dataSnapshot.children){
+                val time = dataSnapshot.getValue(Any::class.java)!!
+                timeList.add(time)
+            }
+            onComplete(timeList)
+        }
+        else{
+            onComplete(emptyList())
+        }
+    }
+}
+
+fun readById(myRef: DatabaseReference, unit: Unit){
+
+}
+fun delete(myRef: DatabaseReference){
+    myRef.removeValue()
+}
+

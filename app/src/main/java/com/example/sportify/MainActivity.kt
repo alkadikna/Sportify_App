@@ -8,6 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.sportify.Model.InitDb
+import com.example.sportify.ui.BookingLayout
 import com.example.sportify.ui.HomeLayout
 import com.example.sportify.ui.LoginLayout
 import com.example.sportify.ui.RegisterLayout
@@ -34,7 +36,9 @@ class MainActivity : ComponentActivity() {
                     composable("register") { RegisterLayout(navCtrl = navController) }
                     composable("home") { HomeLayout(modifier = Modifier, navCtrl = navController) }
                     composable("schedule") { ScheduleLayout(navCtrl = navController) }
+                    composable("booking") { BookingLayout(navCtrl = navController)}
                 }
+                InitDb()
             }
         }
     }

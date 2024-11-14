@@ -2,9 +2,10 @@ package com.example.sportify.Model
 
 class FutsalField(
 
+    name: String,
     isAvailable: Boolean,
     price: Int = 60000
 
-): Field("", isAvailable, price) {
+): Field("",name, isAvailable, price) {
 
 }
