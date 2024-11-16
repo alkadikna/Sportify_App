@@ -1,14 +1,11 @@
-package com.example.sportify
+package com.example.sportify.Repository
 
 import android.util.Log
-import androidx.compose.ui.input.key.Key.Companion.T
 import com.example.sportify.Model.Field
 import com.example.sportify.Model.Time
-import com.google.android.gms.common.internal.Objects
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import kotlin.concurrent.timer
 
 private lateinit var database: FirebaseDatabase
 private  lateinit var auth: FirebaseAuth

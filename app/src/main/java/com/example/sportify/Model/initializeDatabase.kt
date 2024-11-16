@@ -2,10 +2,6 @@ package com.example.sportify.Model
 
 import android.annotation.SuppressLint
 import android.icu.util.Calendar
-import androidx.compose.animation.shrinkVertically
-import com.example.sportify.create
-import com.example.sportify.createTime
-import com.example.sportify.readField
 import com.google.firebase.database.FirebaseDatabase
 import java.text.SimpleDateFormat
 import java.util.Date

@@ -52,20 +52,21 @@ private lateinit var database: FirebaseDatabase;
 @Composable
 fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
     Scaffold(
-        topBar = { FloatingForm() },
+//        topBar = { FloatingForm() },
         bottomBar = {
             BottomNavigationBar(
                 navController = navCtrl,
-                index = 0
+                index = 2
             )
         },
         content = { paddingValues ->
             Column(
                 modifier = Modifier
-                    .size(150.dp)
+                    .fillMaxSize()
                     .padding(paddingValues)
 
             ) {
+                TestingReadDB()
             }
         }
     )

@@ -32,7 +32,10 @@ class MainActivity : ComponentActivity() {
         auth = Firebase.auth
         database = FirebaseDatabase.getInstance("https://sportify-3eb54-default-rtdb.asia-southeast1.firebasedatabase.app")
         val currentUser = auth.currentUser
-        InitDb()
+
+        //initialize database
+//        InitDb()
+
         val startDestination = if (currentUser != null) "home" else "login"
         setContent {
             SportifyTheme {
@@ -43,6 +46,8 @@ class MainActivity : ComponentActivity() {
                     composable("home") { HomeLayout(modifier = Modifier, navCtrl = navController) }
                     composable("schedule") { ScheduleLayout(navCtrl = navController) }
                     composable("booking") { BookingLayout(navCtrl = navController)}
+
+
                 }
 
             }
