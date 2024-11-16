@@ -108,7 +108,10 @@ public fun BottomNavigationBar(modifier: Modifier = Modifier, navController: Nav
                 )
             },
             selected = selectedIndex == 2,
-            onClick = { selectedIndex = 2 },
+            onClick = {
+                selectedIndex = 2
+                navController.navigate("booking")
+            },
             modifier = Modifier.padding(top = 5.dp)
         )
 

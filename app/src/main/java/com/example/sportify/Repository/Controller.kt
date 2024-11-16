@@ -1,13 +1,11 @@
-package com.example.sportify
+package com.example.sportify.Repository
 
-import androidx.compose.ui.input.key.Key.Companion.T
+import android.util.Log
 import com.example.sportify.Model.Field
 import com.example.sportify.Model.Time
-import com.google.android.gms.common.internal.Objects
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import kotlin.concurrent.timer
 
 private lateinit var database: FirebaseDatabase
 private  lateinit var auth: FirebaseAuth
@@ -52,7 +50,17 @@ fun deleteTime(time: Time){
 }
 
 fun create(newObject: Any, myRef: DatabaseReference){
-    myRef.setValue(newObject)
+    myRef.push().setValue(newObject)
+        .addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                Log.d("Firebase", "Data berhasil ditambahkan ke Firebase")
+            } else {
+                Log.e("Firebase", "Gagal menambahkan data", task.exception)
+            }
+        }
+        .addOnFailureListener { exception ->
+            Log.e("Firebase", "Error saat menambahkan data: ${exception.message}")
+        }
 }
 
 fun read(myRef: DatabaseReference, onComplete: (List<Any>) -> Unit)  {

@@ -1,15 +1,23 @@
 package com.example.sportify.Model
 
-import com.example.sportify.create
-import com.example.sportify.createTime
-import com.example.sportify.readField
+import android.annotation.SuppressLint
+import android.icu.util.Calendar
 import com.google.firebase.database.FirebaseDatabase
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 private lateinit var database: FirebaseDatabase
 
 
+@SuppressLint("SimpleDateFormat")
 fun InitDb(){
+    database = FirebaseDatabase.getInstance("https://sportify-3eb54-default-rtdb.asia-southeast1.firebasedatabase.app")
+
     val tempList: MutableList<Field> = mutableListOf()
+    val calendar = Calendar.getInstance()
+    val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+    val dates = mutableListOf<Date>()
 
     tempList.add(BadmintonField("lapangan Badminton 1",true))
     tempList.add(BadmintonField("lapangan Badminton 2",true))
@@ -22,6 +30,7 @@ fun InitDb(){
     tempList.add(FutsalField("lapangan Futsal 1",true))
     tempList.add(FutsalField("lapangan Futsal 2",true))
     tempList.add(FutsalField("lapangan Futsal 3",true))
+
 
     val time89 = Time(
         "",
@@ -53,17 +62,25 @@ fun InitDb(){
         13,
         fieldList = tempList
     )
-    val myRef = database.getReference("schedule")
-    create(time89, myRef)
-    create(time910, myRef)
-    create(time1011, myRef)
-    create(time1112, myRef)
-    create(time1213, myRef)
+    val myRef = database.getReference("schedule").child("Day")
+//    create(time89, myRef)
+//    create(time910, myRef)
+//    create(time1011, myRef)
+//    create(time1112, myRef)
+//    create(time1213, myRef)
 
-//    createTime(time89, "schedule")
-//    createTime(time910, "schedule")
-//    createTime(time1011, "schedule")
-//    createTime(time1112, "schedule")
-//    createTime(time1213, "schedule")
+    for(i in 1 until 7){
+        val day = dateFormat.format(calendar.time)
+        val timeList = listOf<Time>(
+            time89,
+            time910,
+            time1112,
+            time1011,
+            time1213,
+        )
+        val schedule = Schedule(day, timeList.toMutableList())
 
+        myRef.child(day).setValue(schedule)
+        calendar.add(Calendar.DAY_OF_MONTH, 1)
+    }
 }

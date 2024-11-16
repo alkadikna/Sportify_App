@@ -1,19 +1,18 @@
 package com.example.sportify.Model
 
-import com.example.sportify.readField
+import com.example.sportify.Repository.readField
 import com.google.firebase.database.FirebaseDatabase
 
 private lateinit var database: FirebaseDatabase
 
-
 class Time (
 
     var id: String? = null,
-    var startTime: Int,
-    var endTime: Int,
-    var fieldList: MutableList<Field>,
+    var startTime: Int = 0,
+    var endTime: Int = 0,
+    var fieldList: MutableList<Field> = emptyList<Field>().toMutableList(),
 
-){
+    ){
     fun SpecialPrice(){
         if (startTime >= 16){
             fieldList.forEach { field ->
