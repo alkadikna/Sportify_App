@@ -1,5 +1,6 @@
 package com.example.sportify.ui
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,6 +18,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,10 +40,39 @@ import androidx.navigation.NavController
 import com.example.sportify.layout_component.BottomNavigationBar
 import com.example.sportify.R
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 @Composable
 fun ProfileLayout(navController: NavController, auth: FirebaseAuth) {
     val currentUser = auth.currentUser
+    var name by remember { mutableStateOf("-") }
+    var username by remember { mutableStateOf("-") }
+    var email by remember { mutableStateOf(currentUser?.email ?: "-") }
+    var phone by remember { mutableStateOf("-") }
+    var profilePhotoUrl by remember { mutableStateOf<String?>(null) }
+
+    fun fetchUserData(uid: String) {
+        val database = FirebaseDatabase.getInstance("https://sportify-3eb54-default-rtdb.asia-southeast1.firebasedatabase.app").getReference("users").child(uid)
+        database.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                name = snapshot.child("name").getValue(String::class.java) ?: "-"
+                username = snapshot.child("username").getValue(String::class.java) ?: "-"
+                phone = snapshot.child("phone").getValue(String::class.java) ?: "-"
+                profilePhotoUrl = snapshot.child("profilePhotoUrl").getValue(String::class.java)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("ProfileLayout", "Failed to fetch user data: ${error.message}")
+            }
+        })
+    }
+
+    LaunchedEffect(currentUser) {
+        currentUser?.uid?.let { fetchUserData(it) }
+    }
 
 //    val context = LocalContext.current
 //
@@ -68,18 +103,18 @@ fun ProfileLayout(navController: NavController, auth: FirebaseAuth) {
         ) {
             if (currentUser != null) {
                 ProfilePhotoSection(
-                    name = "Sukimin Sukasmin",
-                    username = currentUser.email.toString(),
-                    profilePhotoUrl = null
+                    name = name,
+                    username = username,
+                    profilePhotoUrl = profilePhotoUrl
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
 
                 ProfileInfoSection(
-                    name = "Sukasmin",
-                    username = currentUser.displayName.toString(),
-                    email = currentUser.email.toString(),
-                    phone = currentUser.phoneNumber.toString()
+                    name = name,
+                    username = username,
+                    email = email,
+                    phone = phone
                 )
 
                 // Pengaturan
