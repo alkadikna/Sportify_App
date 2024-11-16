@@ -16,6 +16,7 @@ import com.example.sportify.Model.Field
 import com.example.sportify.Model.TenisField
 import com.example.sportify.Model.Time
 import com.example.sportify.Repository.GetAllSchedule
+import com.example.sportify.Repository.getScheduleByTime
 import com.google.firebase.database.FirebaseDatabase
 
 @Composable
@@ -25,7 +26,10 @@ fun TestingReadDB(){
     val timeList = remember { mutableStateListOf<Time>() }
     timeList.clear()
     LaunchedEffect(Unit) {
-        GetAllSchedule() { times ->
+//        GetAllSchedule("15-11-2024", "tenis") { times ->
+//            timeList.addAll(times)
+//        }
+        getScheduleByTime("futsal",8,11,"15-11-2024"){ times ->
             timeList.addAll(times)
         }
     }
@@ -43,7 +47,7 @@ fun ItemTime(time: Time, modifier: Modifier = Modifier) {
         Text(text = "Time: ${time.startTime}-${time.endTime}")
         if (time.fieldList.isNotEmpty()) {
             Text(text = "Fields:")
-            time.fieldList.filter{it.name.contains("badminton", ignoreCase = true)} .forEach { field ->
+            time.fieldList.filter{it.name.contains("", ignoreCase = true)} .forEach { field ->
                 Text(text = "- ${field.name}: ${if (field.isAvailable) "Available" else "Not Available"}")
             }
         } else {
