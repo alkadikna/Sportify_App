@@ -1,4 +1,4 @@
-package com.example.sportify
+package com.example.sportify.ui
 
 import android.app.Activity
 import android.content.Context
@@ -6,7 +6,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,7 +23,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -35,12 +33,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -53,25 +49,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.sportify.R
 import com.example.sportify.ui.theme.SportifyTheme
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.auth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
-import kotlin.math.log
 
 private lateinit var auth: FirebaseAuth
 private lateinit var googleSignInClient: GoogleSignInClient
 
 
-fun signup(email: String, pass: String, nContext: Context, navCtrl: NavController){
+fun SignIn(email: String, pass: String, nContext: Context, navCtrl: NavController){
     auth = Firebase.auth
-    auth.createUserWithEmailAndPassword(email, pass)
+    auth.signInWithEmailAndPassword(email, pass)
         .addOnCompleteListener{ task ->
             if(task.isSuccessful){
                 val user = auth.currentUser?.email
@@ -85,23 +80,41 @@ fun signup(email: String, pass: String, nContext: Context, navCtrl: NavControlle
             else{
                 Toast.makeText(
                     nContext,
-                    "Register gagal.",
+                    "Autentikasi gagal.",
                     Toast.LENGTH_SHORT
                 ).show()
             }
         }
 }
+@Composable
+fun GoogleSignInAuth(account: GoogleSignInAccount, navCtrl: NavController, activity: Activity){
+        if (account != null) {
+            val idToken = account.idToken
+            if (idToken != null) {
+                val credential = GoogleAuthProvider.getCredential(idToken, null)
+                auth.signInWithCredential(credential)
+                    .addOnCompleteListener(activity) { tasks ->
+                        if (tasks.isSuccessful) {
+                            Log.d("GoogleSignIn", "Login dengan google: berhasil!")
+                            navCtrl.navigate("home")
+                        } else {
+                            Log.w("GoogleSignIn", "Login dengan google: gagal!", tasks.exception)
+                            Toast.makeText(activity, "Autentikasi Gagal.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+            } else {
+                Toast.makeText(activity, "Google Sign-In gagal.", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(activity, "Sign-In gagal.", Toast.LENGTH_SHORT).show()
+        }
+}
 
 @Composable
-fun RegisterLayout(
+fun LoginLayout(
     modifier: Modifier = Modifier,
     navCtrl: NavController
-    ) {
-    var email by remember { mutableStateOf("")}
-    var password by remember { mutableStateOf("")}
-    var repeatPass by remember { mutableStateOf("")}
-    val nContext = LocalContext.current
-
+) {
     fun GoogleSignInAuth(account: GoogleSignInAccount, navCtrl: NavController, activity: Activity){
         if (account != null) {
             val idToken = account.idToken
@@ -124,6 +137,11 @@ fun RegisterLayout(
             Toast.makeText(activity, "Sign-In gagal.", Toast.LENGTH_SHORT).show()
         }
     }
+
+    var email by remember { mutableStateOf("")}
+    var password by remember { mutableStateOf("")}
+    val nContext = LocalContext.current
+
     LaunchedEffect(Unit){
         auth = Firebase.auth
 
@@ -141,7 +159,6 @@ fun RegisterLayout(
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
         GoogleSignInAuth(account = task.result,navCtrl = navCtrl, activity = nContext as Activity)
     }
-
     Box (
         Modifier
             .fillMaxSize()
@@ -162,7 +179,7 @@ fun RegisterLayout(
                 .fillMaxSize(),
             contentScale = ContentScale.Crop,
 
-            )
+        )
         Column {
             Image(
                 painter = painterResource(id = R.drawable.logo),
@@ -172,7 +189,7 @@ fun RegisterLayout(
                     .align(Alignment.CenterHorizontally)
             )
             Text(
-                text = "Register",
+                text = "Login",
                 Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 30.dp),
@@ -217,44 +234,15 @@ fun RegisterLayout(
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
-            TextField(
-                value = repeatPass,
-                onValueChange = {newPass -> repeatPass = newPass},
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 30.dp)
-                    .padding(top = 20.dp),
-                leadingIcon = {
-                    Image(painter = painterResource(id = R.drawable.group), contentDescription = null)
-                },
-                label = { Text(text = "Repeat Password")},
-                placeholder = { Text(text = "Masukkan Ulang Password Anda")},
-                shape = RoundedCornerShape(30.dp),
-                colors = TextFieldDefaults.colors(
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent
-                ),
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-            )
             Button(
                 onClick = {
-                    if(email.isNotEmpty() && password.isNotEmpty()){
-                        if(password == repeatPass){
-                            signup(email, password, nContext, navCtrl)
-                        }
-                        else{
-                            Toast.makeText(
-                                nContext,
-                                "Tolong ulangi password dengan benar",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
+                    if (email.isNotEmpty() && password.isNotEmpty()){
+                        SignIn(email, password, nContext, navCtrl)
                     }
                     else{
                         Toast.makeText(
                             nContext,
-                            "Tolong isi semua data dengan benar",
+                            "Data belum terisi dengan benar",
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -264,15 +252,23 @@ fun RegisterLayout(
                     .padding(horizontal = 30.dp)
                     .fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(Color(0xFFBEF0FF))
-
             ) {
                 Text(
-                    text = "REGISTER",
+                    text = "LOGIN",
                     color = Color.Black
                 )
             }
             Text(
-                text = "atau daftar dengan",
+                text = "Lupa Password?",
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 30.dp)
+                    .padding(top = 20.dp)
+                    .clickable { },
+                textAlign = TextAlign.Right
+            )
+            Text(
+                text = "atau masuk dengan",
                 Modifier
                     .fillMaxWidth()
                     .padding(top = 50.dp)
@@ -281,10 +277,8 @@ fun RegisterLayout(
             )
             Button(
                 onClick = {
-                    if (signInLauncher != null) {
-                        val signInIntent = googleSignInClient.signInIntent
-                        signInLauncher?.launch(signInIntent)
-                    }
+                    val signInIntent =  googleSignInClient.signInIntent
+                    signInLauncher.launch(signInIntent)
                 },
                 Modifier
                     .fillMaxWidth()
@@ -314,16 +308,16 @@ fun RegisterLayout(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Sudah memiliki akun?",
+                    text = "Belum memiliki akun?",
                     color = Color.Black,
                     textAlign = TextAlign.Center,
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 Text(
-                    text = "Login",
+                    text = "Register",
                     Modifier
                         .clickable {
-                            navCtrl.navigate("login")
+                            navCtrl.navigate("register")
                         },
                     color = Color.Black,
                     textAlign = TextAlign.Center,
@@ -340,6 +334,6 @@ fun RegisterLayout(
 private fun LoginPrev() {
     SportifyTheme {
         val navCtrlr = rememberNavController()
-        RegisterLayout(navCtrl = navCtrlr)
+        LoginLayout(navCtrl = navCtrlr)
     }
 }
