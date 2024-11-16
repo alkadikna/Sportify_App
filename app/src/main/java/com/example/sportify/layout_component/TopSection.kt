@@ -17,7 +17,6 @@ import com.example.sportify.R
 @Composable
 public fun TopSection() {
     Column(
-
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .background(Color(0xFF5AB5FF))

@@ -12,6 +12,7 @@ import com.example.sportify.Model.InitDb
 import com.example.sportify.ui.BookingLayout
 import com.example.sportify.ui.HomeLayout
 import com.example.sportify.ui.LoginLayout
+import com.example.sportify.ui.ProfileLayout
 import com.example.sportify.ui.RegisterLayout
 import com.example.sportify.ui.ScheduleLayout
 import com.example.sportify.ui.theme.SportifyTheme
@@ -37,6 +38,7 @@ class MainActivity : ComponentActivity() {
                     composable("home") { HomeLayout(modifier = Modifier, navCtrl = navController) }
                     composable("schedule") { ScheduleLayout(navCtrl = navController) }
                     composable("booking") { BookingLayout(navCtrl = navController)}
+                    composable("profile") { ProfileLayout(navController = navController) }
                 }
                 InitDb()
             }

@@ -148,7 +148,9 @@ public fun BottomNavigationBar(modifier: Modifier = Modifier, navController: Nav
                 )
             },
             selected = selectedIndex == 4,
-            onClick = { selectedIndex = 4 },
+            onClick = {
+                selectedIndex = 4
+                navController.navigate("profile")},
             modifier = Modifier.padding(top = 5.dp)
         )
     }
