@@ -152,11 +152,17 @@ fun RegisterLayout(
         googleSignInClient = GoogleSignIn.getClient(nContext, gso)
     }
 
+
     val signInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        GoogleSignInAuth(account = task.result, navCtrl = navCtrl, activity = nContext as Activity)
+        try {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            GoogleSignInAuth(account = task.result, navCtrl = navCtrl, activity = nContext as Activity)
+        } catch (e : Exception) {
+            Toast.makeText(nContext, "Register Google Gagal. Tolong register dengan benar", Toast.LENGTH_SHORT).show()
+        }
+
     }
 
     Box (

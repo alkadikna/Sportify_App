@@ -1,5 +1,6 @@
 package com.example.sportify.ui
 
+import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -39,15 +40,21 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.sportify.layout_component.BottomNavigationBar
 import com.example.sportify.R
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
+private lateinit var googleSignInClient: GoogleSignInClient
+
 @Composable
 fun ProfileLayout(navController: NavController, auth: FirebaseAuth) {
     val currentUser = auth.currentUser
+    val context = LocalContext.current
     var name by remember { mutableStateOf("-") }
     var username by remember { mutableStateOf("-") }
     var email by remember { mutableStateOf(currentUser?.email ?: "-") }
@@ -74,14 +81,12 @@ fun ProfileLayout(navController: NavController, auth: FirebaseAuth) {
         currentUser?.uid?.let { fetchUserData(it) }
     }
 
-//    val context = LocalContext.current
-//
-//    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-//        .requestIdToken(context.getString(R.string.default_web_client_id))
-//        .requestEmail()
-//        .build()
-//
-//    googleSignInClient = GoogleSignIn.getClient(context, gso)
+    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestIdToken(context.getString(R.string.default_web_client_id))
+        .requestEmail()
+        .build()
+
+    googleSignInClient = GoogleSignIn.getClient(context, gso)
 
     Scaffold(
         topBar = {
@@ -149,7 +154,7 @@ fun ProfileLayout(navController: NavController, auth: FirebaseAuth) {
                 Spacer(modifier = Modifier.height(12.dp))
 
                 //Log Out
-                LogoutButton(navController, auth/*, googleSignInClient*/)
+                LogoutButton(navController, auth, context)
             }
         }
     }
@@ -331,14 +336,12 @@ fun Section(title: String, items: List<Triple<String, Int, (() -> Unit)?>>) {
 
 //Fungsi log out
 @Composable
-fun LogoutButton(navController : NavController, auth: FirebaseAuth/*, googleSignInClient: GoogleSignInClient*/) {
-    val context = LocalContext.current
-
+fun LogoutButton(navController : NavController, auth: FirebaseAuth, context : Context) {
     Button(
         onClick = {
             try {
                 auth.signOut()
-                //googleSignInClient.signOut()
+                googleSignInClient.signOut()
                 navController.navigate("login")
             } catch (e: Exception) {
                 Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()

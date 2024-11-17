@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "260946762531",
+    "firebase_url": "https://sportify-3eb54-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "sportify-3eb54",
     "storage_bucket": "sportify-3eb54.firebasestorage.app"
   },
@@ -19,6 +20,14 @@
           "android_info": {
             "package_name": "com.example.sportify",
             "certificate_hash": "651cf5778cf85d64f62a4c825d90d80b7d8e6269"
+          }
+        },
+        {
+          "client_id": "260946762531-om4vbef4brj7icn5km9v1ji2he1g7u4b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.sportify",
+            "certificate_hash": "90367b49eddd1dc4d94b66aa7a239b910f78d649"
           }
         },
         {
