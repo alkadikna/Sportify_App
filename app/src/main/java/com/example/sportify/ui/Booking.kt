@@ -3,6 +3,7 @@ package com.example.sportify.ui
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.sportify.layout_component.BottomNavigationBar
 import com.example.sportify.layout_component.BottomSheet
+import com.example.sportify.layout_component.FloatingCartButton
 import com.example.sportify.layout_component.TopSectionWithImage
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.FirebaseAuth
@@ -69,6 +71,7 @@ fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
                 index = 1
             )
         },
+//        floatingActionButton = { FloatingCartButton() },
         content = { paddingValues ->
             Column(
                 modifier = Modifier
@@ -98,6 +101,7 @@ fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
                         }
                     }
                 )
+//                FloatingCartButton()
             }
         }
     )
@@ -116,6 +120,7 @@ fun Form(
     var selectedSport by remember { mutableStateOf("Cabang Olahraga") }
     var startTime by remember { mutableStateOf("") }
     var endTime by remember { mutableStateOf("") }
+    var nContext = LocalContext.current
 
     val scaffoldState = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
@@ -191,7 +196,16 @@ fun Form(
                 )
                 Button(
                     onClick = {
-                        navCtrl.navigate("result/$selectedSport/$startTime/$endTime/${selectedDate.value}")
+                        if(startTime.isNotEmpty() && endTime.isNotEmpty()){
+                            navCtrl.navigate("result/$selectedSport/$startTime/$endTime/${selectedDate.value}")
+                        }
+                        else{
+                            Toast.makeText(
+                                nContext,
+                                "Semua data harus diisi!",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                     },
                     Modifier
                         .fillMaxWidth()

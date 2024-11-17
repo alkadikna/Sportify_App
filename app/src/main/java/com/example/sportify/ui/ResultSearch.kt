@@ -2,6 +2,7 @@ package com.example.sportify.ui
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,16 +13,25 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.IconButton
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,15 +41,20 @@ import com.example.sportify.Model.Field
 import com.example.sportify.Model.Time
 import com.example.sportify.R
 import com.example.sportify.Repository.getScheduleByTime
+import com.example.sportify.layout_component.FloatingCartButton
 import com.google.firebase.database.FirebaseDatabase
 
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun TestingReadDB(fieldType: String, start: Int, end: Int, selectedDate: String = ""){
     FirebaseDatabase.getInstance("https://sportify-3eb54-default-rtdb.asia-southeast1.firebasedatabase.app")
 
     val timeList = remember { mutableStateListOf<Time>() }
-    timeList.clear()
+    val cartList = remember { mutableStateListOf<Cart>() }
+    var showDialog by remember { mutableStateOf(false) }
+
+//    timeList.clear()
     LaunchedEffect(Unit) {
         getScheduleByTime(fieldType, start, end, selectedDate){ times ->
             timeList.addAll(times)
@@ -52,12 +67,17 @@ fun TestingReadDB(fieldType: String, start: Int, end: Int, selectedDate: String 
             time.fieldList.filter { it.name.contains("", ignoreCase = true) }
                 .forEach { field ->
                     if (field.isAvailable) {
-                        FieldItem(field = field, selectedDate = selectedDate, startTime = time.startTime, endTime = time.endTime)
+                        FieldItem(field = field, selectedDate = selectedDate, startTime = time.startTime, endTime = time.endTime
+                        , addCart = { cart ->
+                                cartList.add(cart)
+                            }
+                        )
                     }
                 }
         }
-
     }
+    FloatingCartButton(onClick = {showDialog = true})
+    ShowCartDialog(showDialog = showDialog, onDismissDialog = { showDialog = false }, cart = cartList)
 }
 
 @SuppressLint("DefaultLocale")
@@ -66,7 +86,10 @@ fun formatHour(hour: Int): String {
 }
 
 @Composable
-fun FieldItem(field: Field, selectedDate: String, startTime: Int, endTime: Int) {
+fun FieldItem(field: Field, selectedDate: String, startTime: Int, endTime: Int, addCart: (Cart) -> Unit) {
+
+    val cartList = remember { mutableStateListOf<Cart>() }
+
     Card(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.elevatedCardElevation(8.dp),
@@ -103,9 +126,13 @@ fun FieldItem(field: Field, selectedDate: String, startTime: Int, endTime: Int) 
             }
             // Ikon Panah
             Icon(
-                imageVector = Icons.Default.KeyboardArrowRight,
-                contentDescription = "Arrow Icon",
-                modifier = Modifier.size(24.dp)
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add to Cart",
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable {
+                        addCart(Cart(field.name, selectedDate, startTime.toString(), endTime.toString(), field.price.toFloat()))
+                    }
             )
         }
     }
