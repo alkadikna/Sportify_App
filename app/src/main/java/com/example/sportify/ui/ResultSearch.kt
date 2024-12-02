@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.sportify.Model.Field
 import com.example.sportify.Model.Time
 import com.example.sportify.R
@@ -47,7 +48,7 @@ import com.google.firebase.database.FirebaseDatabase
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun TestingReadDB(fieldType: String, start: Int, end: Int, selectedDate: String = ""){
+fun TestingReadDB(navCtrl: NavController, fieldType: String, start: Int, end: Int, selectedDate: String = ""){
     FirebaseDatabase.getInstance("https://sportify-3eb54-default-rtdb.asia-southeast1.firebasedatabase.app")
 
     val timeList = remember { mutableStateListOf<Time>() }
@@ -67,9 +68,14 @@ fun TestingReadDB(fieldType: String, start: Int, end: Int, selectedDate: String 
             time.fieldList.filter { it.name.contains("", ignoreCase = true) }
                 .forEach { field ->
                     if (field.isAvailable) {
-                        FieldItem(field = field, selectedDate = selectedDate, startTime = time.startTime, endTime = time.endTime
-                        , addCart = { cart ->
-                                cartList.add(cart)
+//                        FieldItem(field = field, selectedDate = selectedDate, startTime = time.startTime, endTime = time.endTime
+//                        , addCart = { cart ->
+//                                cartList.add(cart)
+//                            }
+//                        )
+                        FieldItem(field = field, selectedDate = selectedDate, startTime = time.startTime, endTime = time.endTime,
+                            addCart = { item ->
+                                cartList.add(item)
                             }
                         )
                     }
@@ -77,7 +83,7 @@ fun TestingReadDB(fieldType: String, start: Int, end: Int, selectedDate: String 
         }
     }
     FloatingCartButton(onClick = {showDialog = true})
-    ShowCartDialog(showDialog = showDialog, onDismissDialog = { showDialog = false }, cart = cartList)
+    ShowCartDialog(showDialog = showDialog, onDismissDialog = { showDialog = false }, cart = cartList, navCtrl = navCtrl)
 }
 
 @SuppressLint("DefaultLocale")
@@ -131,7 +137,15 @@ fun FieldItem(field: Field, selectedDate: String, startTime: Int, endTime: Int, 
                 modifier = Modifier
                     .size(24.dp)
                     .clickable {
-                        addCart(Cart(field.name, selectedDate, startTime.toString(), endTime.toString(), field.price.toFloat()))
+                        addCart(
+                            Cart(
+                                field.name,
+                                selectedDate,
+                                startTime.toString(),
+                                endTime.toString(),
+                                field.price.toFloat()
+                            )
+                        )
                     }
             )
         }

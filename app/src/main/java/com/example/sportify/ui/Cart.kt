@@ -14,7 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavController
 import com.example.sportify.Model.Field
+import com.google.gson.Gson
 
 class Cart (
     var name: String,
@@ -28,7 +30,8 @@ class Cart (
 fun ShowCartDialog(
     showDialog: Boolean,
     onDismissDialog: () -> Unit,
-    cart: MutableList<Cart>
+    cart: MutableList<Cart>,
+    navCtrl: NavController
 ) {
     if (showDialog) {
         Dialog(onDismissRequest = onDismissDialog) {
@@ -52,10 +55,17 @@ fun ShowCartDialog(
                         TextButton(onClick = onDismissDialog) {
                             Text("Tutup")
                         }
+
+                        TextButton(
+                            onClick = onDismissDialog) {
+                            val gson = Gson()
+                            val cartListJson = gson.toJson(cart)
+                            navCtrl.navigate("order/$cartListJson")
+                            Text("Lanjut")
+                        }
                     }
                 }
             )
-
         }
     }
 }

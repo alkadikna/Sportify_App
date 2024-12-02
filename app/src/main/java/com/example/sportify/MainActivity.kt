@@ -11,9 +11,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.sportify.Model.InitDb
+import com.example.sportify.Model.Order
 import com.example.sportify.ui.BookingLayout
 import com.example.sportify.ui.HomeLayout
 import com.example.sportify.ui.LoginLayout
+import com.example.sportify.ui.OrderLayout
 import com.example.sportify.ui.RegisterLayout
 import com.example.sportify.ui.ScheduleLayout
 import com.example.sportify.ui.TestingReadDB
@@ -49,8 +51,6 @@ class MainActivity : ComponentActivity() {
                     composable("home") { HomeLayout(modifier = Modifier, navCtrl = navController) }
                     composable("schedule") { ScheduleLayout(navCtrl = navController) }
                     composable("booking") { BookingLayout(navCtrl = navController)}
-//                    composable("booking") { TestingReadDB(fieldType = "badminton", start = 8, end = 10)}
-
                     composable (
                         "result/{fieldType}/{start}/{end}/{selectedDate}",
                         arguments = listOf(
@@ -66,10 +66,16 @@ class MainActivity : ComponentActivity() {
                         val end = backStackEntry.arguments?.getInt("end") ?: 0
                         val selectedDate = backStackEntry.arguments?.getString("selectedDate") ?: ""
 
-                        TestingReadDB(fieldType = fieldType, start = start, end = end, selectedDate)
+                        TestingReadDB(navCtrl = navController, fieldType = fieldType, start = start, end = end, selectedDate)
+                    }
+                    composable(
+                        "order/{cartListJson}",
+                    ) {
+                        backStackEntry ->
+                        val cartListJson = backStackEntry.arguments?.getString("cartListJson")?: "[]"
+                        OrderLayout(navCtrl = navController, cartListJson)
                     }
                 }
-
             }
         }
     }
