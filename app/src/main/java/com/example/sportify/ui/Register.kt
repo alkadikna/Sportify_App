@@ -58,26 +58,38 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.ktx.Firebase
 
 private lateinit var auth: FirebaseAuth
 private lateinit var googleSignInClient: GoogleSignInClient
 
 
-fun signup(email: String, pass: String, nContext: Context, navCtrl: NavController){
+fun signup(email: String, username: String, pass: String, nContext: Context, navCtrl: NavController) {
     auth = Firebase.auth
     auth.createUserWithEmailAndPassword(email, pass)
-        .addOnCompleteListener{ task ->
-            if(task.isSuccessful){
-                val user = auth.currentUser?.email
+        .addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val userId = auth.currentUser?.uid
+                if (userId != null) {
+                    // Menyimpan data default ke Firebase Realtime Database atau Firestore
+                    val userData = mapOf(
+                        "email" to email,
+                        "username" to username,
+                        "name" to "-",
+                        "profilePhoto" to "default_profile_photo_url", // URL foto profil default
+                        "phone" to "-"
+                    )
+                    FirebaseDatabase.getInstance("https://sportify-3eb54-default-rtdb.asia-southeast1.firebasedatabase.app").getReference("users").child(userId).setValue(userData)
+                }
+
                 Toast.makeText(
                     nContext,
-                    user.toString(),
+                    "Registrasi berhasil",
                     Toast.LENGTH_SHORT
                 ).show()
                 navCtrl.navigate("home")
-            }
-            else{
+            } else {
                 Toast.makeText(
                     nContext,
                     "Register gagal.",
@@ -95,9 +107,10 @@ fun RegisterLayout(
     var email by remember { mutableStateOf("")}
     var password by remember { mutableStateOf("")}
     var repeatPass by remember { mutableStateOf("")}
+    var username by remember { mutableStateOf("") }
     val nContext = LocalContext.current
 
-    fun GoogleSignInAuth(account: GoogleSignInAccount, navCtrl: NavController, activity: Activity){
+    fun GoogleSignInAuth(account: GoogleSignInAccount, navCtrl: NavController, activity: Activity) {
         if (account != null) {
             val idToken = account.idToken
             if (idToken != null) {
@@ -105,10 +118,18 @@ fun RegisterLayout(
                 auth.signInWithCredential(credential)
                     .addOnCompleteListener(activity) { tasks ->
                         if (tasks.isSuccessful) {
-                            Log.d("GoogleSignIn", "Login dengan google: berhasil!")
+                            val userId = auth.currentUser?.uid
+                            val userData = mapOf(
+                                "email" to (account.email ?: "-"),
+                                "username" to (account.displayName ?: "-"),
+                                "name" to (account.displayName ?: "-"),
+                                "profilePhoto" to (account.photoUrl?.toString() ?: "default_profile_photo_url"),
+                                "phone" to "-"
+                            )
+                            FirebaseDatabase.getInstance().getReference("users").child(userId!!).setValue(userData)
+
                             navCtrl.navigate("home")
                         } else {
-                            Log.w("GoogleSignIn", "Login dengan google: gagal!", tasks.exception)
                             Toast.makeText(activity, "Autentikasi Gagal.", Toast.LENGTH_SHORT).show()
                         }
                     }
@@ -119,22 +140,29 @@ fun RegisterLayout(
             Toast.makeText(activity, "Sign-In gagal.", Toast.LENGTH_SHORT).show()
         }
     }
-    LaunchedEffect(Unit){
+
+    LaunchedEffect(Unit) {
         auth = Firebase.auth
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(R.string.default_web_client_id.toString())
+            .requestIdToken(nContext.getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
 
         googleSignInClient = GoogleSignIn.getClient(nContext, gso)
     }
 
+
     val signInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        GoogleSignInAuth(account = task.result,navCtrl = navCtrl, activity = nContext as Activity)
+        try {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            GoogleSignInAuth(account = task.result, navCtrl = navCtrl, activity = nContext as Activity)
+        } catch (e : Exception) {
+            Toast.makeText(nContext, "Register Google Gagal. Tolong register dengan benar", Toast.LENGTH_SHORT).show()
+        }
+
     }
 
     Box (
@@ -181,7 +209,7 @@ fun RegisterLayout(
                     .padding(horizontal = 30.dp)
                     .padding(top = 20.dp),
                 leadingIcon = {
-                    Image(painter = painterResource(id = R.drawable.group), contentDescription = null)
+                    Image(painter = painterResource(id = R.drawable.email_symbol), contentDescription = null)
                 },
                 label = { Text(text = "Email")},
                 placeholder = { Text(text = "Masukkan Email Anda")},
@@ -193,6 +221,24 @@ fun RegisterLayout(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
             TextField(
+                value = username,
+                onValueChange = { newUsername -> username = newUsername },
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 30.dp)
+                    .padding(top = 20.dp),
+                leadingIcon = {
+                    Image(painter = painterResource(id = R.drawable.group), contentDescription = null)
+                },
+                label = { Text(text = "Username") },
+                placeholder = { Text(text = "Masukkan Username Anda") },
+                shape = RoundedCornerShape(30.dp),
+                colors = TextFieldDefaults.colors(
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent
+                )
+            )
+            TextField(
                 value = password,
                 onValueChange = {newPass -> password = newPass},
                 Modifier
@@ -200,7 +246,7 @@ fun RegisterLayout(
                     .padding(horizontal = 30.dp)
                     .padding(top = 20.dp),
                 leadingIcon = {
-                    Image(painter = painterResource(id = R.drawable.group), contentDescription = null)
+                    Image(painter = painterResource(id = R.drawable.icon_password), contentDescription = null)
                 },
                 label = { Text(text = "Password")},
                 placeholder = { Text(text = "Masukkan Password Anda")},
@@ -220,7 +266,7 @@ fun RegisterLayout(
                     .padding(horizontal = 30.dp)
                     .padding(top = 20.dp),
                 leadingIcon = {
-                    Image(painter = painterResource(id = R.drawable.group), contentDescription = null)
+                    Image(painter = painterResource(id = R.drawable.icon_password), contentDescription = null)
                 },
                 label = { Text(text = "Repeat Password")},
                 placeholder = { Text(text = "Masukkan Ulang Password Anda")},
@@ -234,9 +280,9 @@ fun RegisterLayout(
             )
             Button(
                 onClick = {
-                    if(email.isNotEmpty() && password.isNotEmpty()){
+                    if(email.isNotEmpty() && password.isNotEmpty() && username.isNotEmpty()){
                         if(password == repeatPass){
-                            signup(email, password, nContext, navCtrl)
+                            signup(email, username, password, nContext, navCtrl)
                         }
                         else{
                             Toast.makeText(
@@ -332,7 +378,7 @@ fun RegisterLayout(
 
 @Preview(showBackground = true)
 @Composable
-private fun LoginPrev() {
+private fun RegisterPrev() {
     SportifyTheme {
         val navCtrlr = rememberNavController()
         RegisterLayout(navCtrl = navCtrlr)
