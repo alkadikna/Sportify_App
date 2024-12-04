@@ -22,12 +22,12 @@ public fun TopSectionWithImage() {
         modifier = Modifier
             .background(Color(0xFF5AB5FF))
             .fillMaxWidth()
-            .height(190.dp)
+//            .height(189.5.dp)
     ) {
         Image(
             painter = painterResource(id = R.drawable.image_6), // Replace with your icon resource
             contentDescription = "App Icon",
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

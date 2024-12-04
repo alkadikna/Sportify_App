@@ -70,6 +70,8 @@ dependencies {
     implementation(libs.androidx.material)
     implementation(libs.androidx.material3)
     implementation(libs.firebase.database)
+    implementation (libs.androidx.material.icons.extended)
+    implementation (libs.google.gson)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
