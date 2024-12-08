@@ -19,11 +19,11 @@ import com.example.sportify.Model.Field
 import com.google.gson.Gson
 
 class Cart (
-    var name: String,
-    var date: String,
-    var startTime: String,
-    var endTime: String,
-    var price: Float
+    var name: String = "",
+    var date: String = "",
+    var startTime: String = "",
+    var endTime: String = "",
+    var price: Double = 0.0
 )
 
 @Composable

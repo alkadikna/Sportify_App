@@ -1,5 +1,6 @@
 package com.example.sportify.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -42,7 +43,9 @@ import com.google.firebase.database.FirebaseDatabase
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -51,7 +54,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
+import com.example.sportify.Model.Time
 import com.example.sportify.R
+import com.example.sportify.Repository.getOrder
 import com.example.sportify.layout_component.BottomNavigationBar
 import com.example.sportify.layout_component.TopSection
 import com.example.sportify.ui.theme.SportifyTheme
@@ -260,24 +265,33 @@ fun AvailableFieldsSection() {
     }
 }
 
-
 @Composable
 fun UserBookingSection() {
+    val orderList = remember { mutableStateListOf<Cart>() }
+
+    LaunchedEffect(Unit) {
+        getOrder { orders ->
+            orderList.clear()  // Clear previous orders
+            orderList.addAll(orders)  // Add new orders
+        }
+    }
+
     Column {
         Text(text = "Pesanan anda", style = MaterialTheme.typography.bodyLarge)
 
         Spacer(modifier = Modifier.height(8.dp))
 
         // Sample bookings
-        listOf(
-            "Lapangan Badminton A3, Selasa 03 Okt 2023, 16:00 - 18:00",
-            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
-            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
-            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
-            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
-            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
-            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
-        ).forEach { booking ->
+//        listOf(
+//            "Lapangan Badminton A3, Selasa 03 Okt 2023, 16:00 - 18:00",
+//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
+//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
+//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
+//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
+//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
+//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
+//        ).
+        orderList.forEach { order ->
             Surface(
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
@@ -296,7 +310,9 @@ fun UserBookingSection() {
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        Text(text = booking, fontSize = 14.sp)
+                        Text(text = order.name, fontSize = 14.sp)
+                        Text(text = order.date, fontSize = 14.sp)
+                        Text(text = formatHour(order.startTime.toInt()) + "-" + formatHour(order.endTime.toInt()), fontSize = 14.sp)
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     Icon(
