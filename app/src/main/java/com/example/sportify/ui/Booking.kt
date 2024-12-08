@@ -121,6 +121,7 @@ fun Form(
     var startTime by remember { mutableStateOf("") }
     var endTime by remember { mutableStateOf("") }
     var nContext = LocalContext.current
+    var isValid by remember { mutableStateOf(false)}
 
     val scaffoldState = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
@@ -196,8 +197,18 @@ fun Form(
                 )
                 Button(
                     onClick = {
+                        isValid = startTime.toIntOrNull() != null && endTime.toIntOrNull() != null
                         if(startTime.isNotEmpty() && endTime.isNotEmpty()){
-                            navCtrl.navigate("result/$selectedSport/$startTime/$endTime/${selectedDate.value}")
+                            if(isValid){
+                                navCtrl.navigate("result/$selectedSport/$startTime/$endTime/${selectedDate.value}")
+                            }
+                            else{
+                                Toast.makeText(
+                                    nContext,
+                                    "Waktu harus berupa angka!",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
                         }
                         else{
                             Toast.makeText(

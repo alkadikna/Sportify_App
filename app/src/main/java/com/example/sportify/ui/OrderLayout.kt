@@ -8,7 +8,8 @@ import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
-import com.example.sportify.Repository.updateAvailability
+import com.example.sportify.Repository.saveOrder
+import com.example.sportify.Repository.updateField
 import com.google.firebase.database.FirebaseDatabase
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -35,7 +36,11 @@ fun OrderLayout(navCtrl: NavController, cartListJson: String, modifier: Modifier
             }
         }
         Button(
-            onClick = { updateAvailability(cartList) }
+            onClick = { updateField(cartList)
+                navCtrl.navigate("home")
+                saveOrder(cartList)
+            }
+
         ) {
             Text(text = "Pesan")
         }

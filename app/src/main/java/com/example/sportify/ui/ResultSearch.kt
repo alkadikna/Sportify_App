@@ -143,7 +143,7 @@ fun FieldItem(field: Field, selectedDate: String, startTime: Int, endTime: Int, 
                                 selectedDate,
                                 startTime.toString(),
                                 endTime.toString(),
-                                field.price.toFloat()
+                                field.price.toDouble()
                             )
                         )
                     }
