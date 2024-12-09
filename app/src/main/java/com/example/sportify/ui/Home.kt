@@ -1,6 +1,7 @@
 package com.example.sportify.ui
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -291,6 +292,7 @@ fun UserBookingSection() {
 //            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
 //            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
 //        ).
+        Log.d("OrderList", "Orderlist: $orderList")
         orderList.forEach { order ->
             Surface(
                 shape = RoundedCornerShape(8.dp),

@@ -72,6 +72,7 @@ dependencies {
     implementation(libs.firebase.database)
     implementation (libs.androidx.material.icons.extended)
     implementation (libs.google.gson)
+    implementation(libs.firebase.crashlytics.buildtools)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
