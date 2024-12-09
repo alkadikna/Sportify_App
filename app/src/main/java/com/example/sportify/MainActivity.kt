@@ -12,6 +12,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.sportify.Model.InitDb
 import com.example.sportify.Model.Order
+import com.example.sportify.Repository.deleteOutdatedSchedule
+import com.example.sportify.Repository.deleteOutdatedTimes
 import com.example.sportify.ui.BookingLayout
 import com.example.sportify.ui.HomeLayout
 import com.example.sportify.ui.LoginLayout
@@ -69,7 +71,9 @@ class MainActivity : ComponentActivity() {
                         OrderLayout(navCtrl = navController, cartListJson)
                     }
                 }
-                InitDb()
+//                InitDb()
+                deleteOutdatedSchedule()
+                deleteOutdatedTimes()
             }
         }
     }
