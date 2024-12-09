@@ -1,6 +1,7 @@
 package com.example.sportify.ui
 
 import android.app.DatePickerDialog
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -26,11 +27,12 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,51 +46,48 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.sportify.Repository.FetchScheduleData
 import com.example.sportify.layout_component.BottomNavigationBar
 import com.example.sportify.layout_component.TopSection
 import com.example.sportify.ui.theme.SportifyTheme
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 @Composable
-fun ScheduleLayout(navCtrl: NavController){
-    // Dummy data
-    val reservations = mapOf(
-        "Lapangan 1" to listOf("9:00" to "Alif"),
-        "Lapangan 3" to listOf("11:00" to "Rasyad"),
-        "Lapangan 2" to listOf("13:00" to "Marshel")
-    )
-
-    // State
-    val selectedDate = remember { mutableStateOf("Jumat, 18 Oktober 2024") }
+fun ScheduleLayout(navCtrl: NavController) {
     val calendar = remember { Calendar.getInstance() }
-    val context = LocalContext.current
+    val dateFormat = SimpleDateFormat("EEEE, dd MMMM yyyy", Locale("id", "ID"))
+    val outputFormat = SimpleDateFormat("dd-MM-yyyy", Locale("id", "ID"))
 
+    val selectedDate = remember { mutableStateOf(dateFormat.format(calendar.time)) }
+    val formattedDate = remember {
+        mutableStateOf(outputFormat.format(calendar.time))
+    }
+    val showDatePicker = remember { mutableStateOf(false) }
+    val selectedFieldType = remember { mutableStateOf("Badminton") }
+
+
+    // Fungsi untuk memperbarui tanggal
     fun updateDate(action: String) {
         when (action) {
             "previous" -> calendar.add(Calendar.DAY_OF_MONTH, -1) // Kurangi 1 hari
             "next" -> calendar.add(Calendar.DAY_OF_MONTH, 1) // Tambah 1 hari
-            "select" -> { /* Pemilihan melalui DatePicker */ }
         }
-        
-        val dateFormat = SimpleDateFormat("EEEE, dd MMMM yyyy", Locale("id", "ID"))
         selectedDate.value = dateFormat.format(calendar.time)
+        formattedDate.value = outputFormat.format(calendar.time)
+        Log.d("Tanggal", "Tanggal data berubah: $selectedDate atau $formattedDate")
+
     }
 
-    // Memperbarui tanggal awal berdasarkan default di state
-    LaunchedEffect(Unit) {
-        val dateFormat = SimpleDateFormat("EEEE, dd MMMM yyyy", Locale("id", "ID"))
-        calendar.time = dateFormat.parse(selectedDate.value) ?: Calendar.getInstance().time
-    }
-
-    // UI Begin
-    Scaffold (
-        topBar = { FloatingDropDown() },
+    Scaffold(
+        topBar = { FloatingDropDown(selectedFieldType) },
         bottomBar = {
             BottomNavigationBar(
                 navController = navCtrl,
@@ -103,21 +102,12 @@ fun ScheduleLayout(navCtrl: NavController){
             ) {
                 Spacer(modifier = Modifier.height(15.dp))
                 TableScreen(
-                    reservations = reservations,
-                    selectedDate = selectedDate.value,
+                    fieldType = selectedFieldType.value,
+                    selectedDate = formattedDate.value,
                     onDateChange = { action ->
                         if (action == "select") {
-                            // Dialog DatePicker
-                            DatePickerDialog(
-                                context,
-                                { _, year, month, dayOfMonth ->
-                                    calendar.set(year, month, dayOfMonth)
-                                    updateDate("") // Format ulang tanggal setelah dipilih
-                                },
-                                calendar.get(Calendar.YEAR),
-                                calendar.get(Calendar.MONTH),
-                                calendar.get(Calendar.DAY_OF_MONTH)
-                            ).show()
+                            // Tampilkan DatePicker
+                            showDatePicker.value = true
                         } else {
                             updateDate(action) // Previous atau Next
                         }
@@ -129,19 +119,18 @@ fun ScheduleLayout(navCtrl: NavController){
 }
 
 @Composable
-fun FloatingDropDown() {
+fun FloatingDropDown(selectedFieldType: MutableState<String>) {
     Box(modifier = Modifier.fillMaxWidth()) {
         TopSection()
-        DropDown(modifier = Modifier)
+        DropDown(modifier = Modifier, selectedFieldType = selectedFieldType)
     }
 }
 
 @Composable
-fun DropDown(modifier: Modifier) {
+fun DropDown(modifier: Modifier, selectedFieldType: MutableState<String>) {
     val context = LocalContext.current
     val listSport = arrayOf("Badminton", "Tennis", "Futsal", "Basket")
     var expanded by remember { mutableStateOf(false) }
-    var selectedText by remember { mutableStateOf("Cabang Olahraga") }
 
     Column(
         modifier = Modifier
@@ -166,7 +155,7 @@ fun DropDown(modifier: Modifier) {
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             Text(
-                text = selectedText,
+                text = selectedFieldType.value,
                 modifier = Modifier.weight(1f),
                 color = Color.Black
             )
@@ -196,7 +185,7 @@ fun DropDown(modifier: Modifier) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                selectedText = item
+                                selectedFieldType.value = item
                                 expanded = false
                                 Toast
                                     .makeText(context, item, Toast.LENGTH_SHORT)
@@ -212,27 +201,50 @@ fun DropDown(modifier: Modifier) {
 
 @Composable
 fun TableScreen(
-    reservations: Map<String, List<Pair<String, String>>>,
     selectedDate: String,
+    fieldType: String,
     onDateChange: (String) -> Unit
-
 ) {
     val timeSlots = (8..22).map { "$it:00" }
-
     val columnWeight = .3f
+    val showDatePicker = remember { mutableStateOf(false) }
+    val calendar = Calendar.getInstance()
+    val reservations = remember { mutableStateOf<Map<String, Map<String, String>>>(emptyMap()) }
+
+    LaunchedEffect(selectedDate, fieldType) {
+        FetchScheduleData(selectedDate, fieldType) { data ->
+            Log.d("FetchScheduleData", "Data: $data")
+            val formattedData = mutableMapOf<String, MutableMap<String, String>>()
+            data.forEach { time ->
+                val fields = mutableMapOf<String, String>()
+                time.fieldList.forEach { field ->
+                    if (!field.isAvailable) {
+                        fields[field.name] = field.user
+                    } else {
+                        fields[field.name] = ""
+                    }
+                }
+                formattedData["${time.startTime}:00"] = fields
+            }
+            reservations.value = formattedData
+            Log.d("ReservationsData", "Data reservasi: ${reservations.value}")
+        }
+    }
 
     Column(
         Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)) {
+            .padding(horizontal = 16.dp)
+    ) {
+        // Header tanggal
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            IconButton(onClick = { onDateChange("previous") }) { // Tanggal sebelumnya
+            IconButton(onClick = { onDateChange("previous") }) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Previous")
             }
-            TextButton(onClick = { onDateChange("select") }) { // Memunculkan DatePicker
-                Text(text = selectedDate, style = androidx.compose.material.MaterialTheme.typography.h6)
+            TextButton(onClick = { showDatePicker.value = true }) { // Memunculkan DatePicker
+                Text(text = selectedDate, style = MaterialTheme.typography.h6)
             }
-            IconButton(onClick = { onDateChange("next") }) { // Tanggal berikutnya
+            IconButton(onClick = { onDateChange("next") }) {
                 Icon(Icons.Default.ArrowForward, contentDescription = "Next")
             }
         }
@@ -241,30 +253,42 @@ fun TableScreen(
         Row(
             Modifier
                 .background(Color.Gray)
-                .fillMaxWidth()) {
-            listOf("Lapangan 1", "Lapangan 2", "Lapangan 3").forEach { title ->
-                TableCellParent(text = title, weight = columnWeight)
+                .fillMaxWidth()
+        ) {
+            listOf(1, 2, 3).forEach { i ->
+                TableCellParent(text = "$fieldType $i", weight = columnWeight)
             }
         }
 
-        // Baris waktu dan data pemesanan
+        // Data
         LazyColumn(Modifier.fillMaxSize()) {
             items(timeSlots) { time ->
                 Row(Modifier.fillMaxWidth()) {
-                    listOf("Lapangan 1", "Lapangan 2", "Lapangan 3").forEach { lapangan ->
-                        val reservation = reservations[lapangan]?.find { it.first == time }
+                    listOf(1, 2, 3).forEach { i ->
+                        val lapanganName = "lapangan $fieldType $i"
+                        val reservation = reservations.value[time]?.get(lapanganName)
+                        val isReserved = reservation != null && reservation != ""
                         TableCell(
                             time = time,
-                            text = reservation?.second ?: "",
+                            text = reservation ?: "",
                             weight = columnWeight,
-                            backgroundColor = if (reservation != null) Color.Red.copy(alpha = 0.1f) else Color.White
+                            backgroundColor = if (isReserved) Color.Red.copy(alpha = 0.1f) else Color.White
                         )
                     }
                 }
             }
         }
+
+        if (showDatePicker.value) {
+            ShowDatePicker(calendar) { year, month, dayOfMonth ->
+                calendar.set(year, month, dayOfMonth)
+                onDateChange("select")
+                showDatePicker.value = false
+            }
+        }
     }
 }
+
 
 @Composable
 fun RowScope.TableCellParent(
@@ -279,7 +303,7 @@ fun RowScope.TableCellParent(
             .background(backgroundColor)
             .padding(8.dp)
     ) {
-        Text(text = text, style = androidx.compose.material.MaterialTheme.typography.body2)
+        Text(text = text, style = MaterialTheme.typography.body2)
     }
 }
 
@@ -298,12 +322,30 @@ fun RowScope.TableCell(
             .padding(vertical = 20.dp, horizontal = 10.dp)
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)){
-            Text(text = time, style = androidx.compose.material.MaterialTheme.typography.caption, color = Color.Gray) // Label waktu
-            Text(text = text, style = androidx.compose.material.MaterialTheme.typography.caption, color = Color.Gray, fontWeight = FontWeight.Bold)
+            Text(text = time, style = MaterialTheme.typography.caption, color = Color.Gray)
+            Text(text = text, style = MaterialTheme.typography.caption, color = Color.Gray, fontWeight = FontWeight.Bold)
         }
 
     }
 }
+
+@Composable
+fun ShowDatePicker(
+    calendar: Calendar,
+    onDateSelected: (Int, Int, Int) -> Unit
+) {
+    val context = LocalContext.current
+    DatePickerDialog(
+        context,
+        { _, year, month, dayOfMonth ->
+            onDateSelected(year, month, dayOfMonth)
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    ).show()
+}
+
 
 @Preview(showBackground = true)
 @Composable

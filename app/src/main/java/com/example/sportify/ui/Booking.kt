@@ -68,7 +68,7 @@ fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
         bottomBar = {
             BottomNavigationBar(
                 navController = navCtrl,
-                index = 1
+                index = 2
             )
         },
 //        floatingActionButton = { FloatingCartButton() },

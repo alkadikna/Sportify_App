@@ -23,7 +23,7 @@ fun OrderLayout(navCtrl: NavController, cartListJson: String, modifier: Modifier
     database = FirebaseDatabase.getInstance("https://sportify-3eb54-default-rtdb.asia-southeast1.firebasedatabase.app")
 
     val gson = Gson()
-    val listType = object : TypeToken<List<Cart>>() {}.type
+    val listType = object : com.google.gson.reflect.TypeToken<List<Cart>>() {}.type
     val cartList: List<Cart> = gson.fromJson(cartListJson, listType)
     
     Column {

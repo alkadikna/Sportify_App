@@ -2,6 +2,7 @@ package com.example.sportify.Repository
 
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -9,7 +10,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalView
 import com.example.sportify.Model.Time
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -21,7 +25,7 @@ private  lateinit var auth: FirebaseAuth
 
 
 
-fun GetAllSchedule(selectedDate: String, fieldType: String, onComplete: (MutableList<Time>) -> Unit)  {
+fun FetchScheduleData(selectedDate: String, fieldType: String, onComplete: (MutableList<Time>) -> Unit)  {
     var timeList = mutableListOf<Time>()
     database = FirebaseDatabase.getInstance("https://sportify-3eb54-default-rtdb.asia-southeast1.firebasedatabase.app")
 
@@ -179,6 +183,7 @@ fun deleteOutdatedTimes() {
         Log.e("Firebase", "Failed to fetch schedule data", it)
     }
 }
+
 
 
 
