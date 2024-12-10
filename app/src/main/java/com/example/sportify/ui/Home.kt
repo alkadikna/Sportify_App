@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Scaffold
@@ -57,10 +58,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.sportify.Model.Time
 import com.example.sportify.R
+import com.example.sportify.Repository.FetchScheduleData
 import com.example.sportify.Repository.getOrder
 import com.example.sportify.layout_component.BottomNavigationBar
 import com.example.sportify.layout_component.TopSection
 import com.example.sportify.ui.theme.SportifyTheme
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 private lateinit var auth: FirebaseAuth;
 private lateinit var googleSignInClient: GoogleSignInClient
@@ -92,7 +97,7 @@ fun HomeLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
                     item { Spacer(modifier = Modifier.height(16.dp)) }
 
                     // Field types section
-                    item { FieldTypeSection() }
+                    item { FieldTypeSection(navCtrl) }
                     item { Spacer(modifier = Modifier.height(16.dp)) }
 
                     // Available fields section
@@ -156,7 +161,17 @@ fun SearchBar(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun FieldTypeSection() {
+fun FieldTypeSection(navCtrl: NavController) {
+
+    val calendar = remember { Calendar.getInstance() }
+    val selectedDate = remember {
+        mutableStateOf(
+            SimpleDateFormat("dd-MM-yyyy", Locale("id","ID")).format(calendar.time)
+        )
+    }
+    val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale("id", "ID"))
+    selectedDate.value = dateFormat.format(calendar.time)
+
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxWidth()
@@ -172,7 +187,7 @@ fun FieldTypeSection() {
             contentPadding = PaddingValues(horizontal = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(25.dp)
         ) {
-            items(listOf("Badminton", "Futsal", "Tennis", "Basket", "Soon")) { type ->
+            items(listOf("Badminton", "Futsal", "Tenis")) { type ->
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(vertical = 10.dp)
@@ -183,20 +198,26 @@ fun FieldTypeSection() {
                         color = Color.Gray // Placeholder for image background color
                     ) {
                         // Replace this with an Image composable for actual images
-                        Box(contentAlignment = Alignment.Center) {
+                        Button(
+                            onClick = {
+                                navCtrl.navigate("result/$type/0/0/${selectedDate.value}")
+                            }
+                        ){
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = type.take(1),
+                                    fontSize = 20.sp,
+                                    color = Color.White
+                                ) // Placeholder text (e.g., "B" for "Badminton")
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = type.take(1),
-                                fontSize = 20.sp,
-                                color = Color.White
-                            ) // Placeholder text (e.g., "B" for "Badminton")
+                                text = type,
+                                fontSize = 12.sp,
+                                color = Color.Black
+                            )
                         }
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = type,
-                        fontSize = 12.sp,
-                        color = Color.Black
-                    )
                 }
             }
         }

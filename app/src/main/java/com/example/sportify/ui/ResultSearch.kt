@@ -41,6 +41,7 @@ import androidx.navigation.NavController
 import com.example.sportify.Model.Field
 import com.example.sportify.Model.Time
 import com.example.sportify.R
+import com.example.sportify.Repository.FetchScheduleData
 import com.example.sportify.Repository.getScheduleByTime
 import com.example.sportify.layout_component.FloatingCartButton
 import com.google.firebase.database.FirebaseDatabase
@@ -57,8 +58,15 @@ fun TestingReadDB(navCtrl: NavController, fieldType: String, start: Int, end: In
 
 //    timeList.clear()
     LaunchedEffect(Unit) {
-        getScheduleByTime(fieldType, start, end, selectedDate){ times ->
-            timeList.addAll(times)
+        if(start == 0 && end == 0){
+            FetchScheduleData(selectedDate, fieldType){ times ->
+                timeList.addAll(times)
+            }
+        }
+        else{
+            getScheduleByTime(fieldType, start, end, selectedDate){ times ->
+                timeList.addAll(times)
+            }
         }
     }
 
