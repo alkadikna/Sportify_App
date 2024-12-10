@@ -213,6 +213,7 @@ fun RegisterLayout(
                 },
                 label = { Text(text = "Email")},
                 placeholder = { Text(text = "Masukkan Email Anda")},
+                singleLine = true,
                 shape = RoundedCornerShape(30.dp),
                 colors = TextFieldDefaults.colors(
                     unfocusedIndicatorColor = Color.Transparent,
@@ -232,6 +233,7 @@ fun RegisterLayout(
                 },
                 label = { Text(text = "Username") },
                 placeholder = { Text(text = "Masukkan Username Anda") },
+                singleLine = true,
                 shape = RoundedCornerShape(30.dp),
                 colors = TextFieldDefaults.colors(
                     unfocusedIndicatorColor = Color.Transparent,
@@ -250,6 +252,7 @@ fun RegisterLayout(
                 },
                 label = { Text(text = "Password")},
                 placeholder = { Text(text = "Masukkan Password Anda")},
+                singleLine = true,
                 shape = RoundedCornerShape(30.dp),
                 colors = TextFieldDefaults.colors(
                     unfocusedIndicatorColor = Color.Transparent,
@@ -270,6 +273,7 @@ fun RegisterLayout(
                 },
                 label = { Text(text = "Repeat Password")},
                 placeholder = { Text(text = "Masukkan Ulang Password Anda")},
+                singleLine = true,
                 shape = RoundedCornerShape(30.dp),
                 colors = TextFieldDefaults.colors(
                     unfocusedIndicatorColor = Color.Transparent,
