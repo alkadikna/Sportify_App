@@ -64,14 +64,15 @@ private lateinit var auth: FirebaseAuth
 private lateinit var googleSignInClient: GoogleSignInClient
 
 
-fun LogIn(email: String, pass: String, nContext: Context, navCtrl: NavController){
+fun SignIn(email: String, pass: String, nContext: Context, navCtrl: NavController){
     auth = Firebase.auth
     auth.signInWithEmailAndPassword(email, pass)
         .addOnCompleteListener{ task ->
             if(task.isSuccessful){
+                val user = auth.currentUser?.email
                 Toast.makeText(
                     nContext,
-                    "Login berhasil",
+                    user.toString(),
                     Toast.LENGTH_SHORT
                 ).show()
                 navCtrl.navigate("home")
@@ -79,10 +80,33 @@ fun LogIn(email: String, pass: String, nContext: Context, navCtrl: NavController
             else{
                 Toast.makeText(
                     nContext,
-                    "Login gagal.",
+                    "Autentikasi gagal.",
                     Toast.LENGTH_SHORT
                 ).show()
             }
+        }
+}
+@Composable
+fun GoogleSignInAuth(account: GoogleSignInAccount, navCtrl: NavController, activity: Activity){
+        if (account != null) {
+            val idToken = account.idToken
+            if (idToken != null) {
+                val credential = GoogleAuthProvider.getCredential(idToken, null)
+                auth.signInWithCredential(credential)
+                    .addOnCompleteListener(activity) { tasks ->
+                        if (tasks.isSuccessful) {
+                            Log.d("GoogleSignIn", "Login dengan google: berhasil!")
+                            navCtrl.navigate("home")
+                        } else {
+                            Log.w("GoogleSignIn", "Login dengan google: gagal!", tasks.exception)
+                            Toast.makeText(activity, "Autentikasi Gagal.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+            } else {
+                Toast.makeText(activity, "Google Sign-In gagal.", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(activity, "Sign-In gagal.", Toast.LENGTH_SHORT).show()
         }
 }
 
@@ -213,7 +237,7 @@ fun LoginLayout(
             Button(
                 onClick = {
                     if (email.isNotEmpty() && password.isNotEmpty()){
-                        LogIn(email, password, nContext, navCtrl)
+                        SignIn(email, password, nContext, navCtrl)
                     }
                     else{
                         Toast.makeText(
