@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.IconButton
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,6 +52,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.sportify.R
 import com.example.sportify.Repository.FetchScheduleData
 import com.example.sportify.layout_component.BottomNavigationBar
 import com.example.sportify.layout_component.TopSection
@@ -210,9 +212,13 @@ fun TableScreen(
     val showDatePicker = remember { mutableStateOf(false) }
     val calendar = Calendar.getInstance()
     val reservations = remember { mutableStateOf<Map<String, Map<String, String>>>(emptyMap()) }
+    val isLoading = remember { mutableStateOf(false) }
 
     LaunchedEffect(selectedDate, fieldType) {
+        isLoading.value = true
+        kotlinx.coroutines.delay(1000)
         FetchScheduleData(selectedDate, fieldType) { data ->
+            isLoading.value = false
             Log.d("FetchScheduleData", "Data: $data")
             val formattedData = mutableMapOf<String, MutableMap<String, String>>()
             data.forEach { time ->
@@ -249,31 +255,42 @@ fun TableScreen(
             }
         }
 
-        // Header kolom
-        Row(
-            Modifier
-                .background(Color.Gray)
-                .fillMaxWidth()
-        ) {
-            listOf(1, 2, 3).forEach { i ->
-                TableCellParent(text = "$fieldType $i", weight = columnWeight)
+        if (isLoading.value) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = colorResource(id = R.color.main_blue))
             }
-        }
+        } else {
+            // Header kolom
+            Row(
+                Modifier
+                    .background(Color.Gray)
+                    .fillMaxWidth()
+            ) {
+                listOf(1, 2, 3).forEach { i ->
+                    TableCellParent(text = "$fieldType $i", weight = columnWeight)
+                }
+            }
 
-        // Data
-        LazyColumn(Modifier.fillMaxSize()) {
-            items(timeSlots) { time ->
-                Row(Modifier.fillMaxWidth()) {
-                    listOf(1, 2, 3).forEach { i ->
-                        val lapanganName = "lapangan $fieldType $i"
-                        val reservation = reservations.value[time]?.get(lapanganName)
-                        val isReserved = reservation != null && reservation != ""
-                        TableCell(
-                            time = time,
-                            text = reservation ?: "",
-                            weight = columnWeight,
-                            backgroundColor = if (isReserved) Color.Red.copy(alpha = 0.1f) else Color.White
-                        )
+            // Data
+            LazyColumn(Modifier.fillMaxSize()) {
+                items(timeSlots) { time ->
+                    Row(Modifier.fillMaxWidth()) {
+                        listOf(1, 2, 3).forEach { i ->
+                            val lapanganName = "lapangan $fieldType $i"
+                            val reservation = reservations.value[time]?.get(lapanganName)
+                            val isReserved = reservation != null && reservation != ""
+                            TableCell(
+                                time = time,
+                                text = reservation ?: "",
+                                weight = columnWeight,
+                                backgroundColor = if (isReserved) Color.Red.copy(alpha = 0.1f) else Color.White
+                            )
+                        }
                     }
                 }
             }
@@ -303,7 +320,7 @@ fun RowScope.TableCellParent(
             .background(backgroundColor)
             .padding(8.dp)
     ) {
-        Text(text = text, style = MaterialTheme.typography.body2)
+        Text(text = text, style = MaterialTheme.typography.body2, textAlign = TextAlign.Center)
     }
 }
 
