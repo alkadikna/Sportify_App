@@ -73,11 +73,10 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 LaunchedEffect(Unit) {
-                    InitDb()
+//                    InitDb()
                     deleteOutdatedSchedule()
-//                    deleteOutdatedTimes()
+//                    deleteOutdatedTimes()s
                 }
-
             }
         }
     }
