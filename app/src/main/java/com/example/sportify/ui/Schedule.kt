@@ -2,6 +2,7 @@ package com.example.sportify.ui
 
 import android.app.DatePickerDialog
 import android.util.Log
+import android.widget.DatePicker
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -29,9 +30,12 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Surface
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -43,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -50,6 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.sportify.R
@@ -247,8 +253,8 @@ fun TableScreen(
             IconButton(onClick = { onDateChange("previous") }) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Previous")
             }
-            TextButton(onClick = { showDatePicker.value = true }) { // Memunculkan DatePicker
-                Text(text = selectedDate, style = MaterialTheme.typography.h6)
+            TextButton(onClick = { showDatePicker.value = true }) {
+                Text(text = "Jadwal: $selectedDate", style = MaterialTheme.typography.h6)
             }
             IconButton(onClick = { onDateChange("next") }) {
                 Icon(Icons.Default.ArrowForward, contentDescription = "Next")
@@ -297,11 +303,11 @@ fun TableScreen(
         }
 
         if (showDatePicker.value) {
-            ShowDatePicker(calendar) { year, month, dayOfMonth ->
+            ShowDatePicker(calendar, { year, month, dayOfMonth ->
                 calendar.set(year, month, dayOfMonth)
-                onDateChange("select")
                 showDatePicker.value = false
-            }
+                onDateChange("select")
+            }, showDatePicker)
         }
     }
 }
@@ -349,19 +355,32 @@ fun RowScope.TableCell(
 @Composable
 fun ShowDatePicker(
     calendar: Calendar,
-    onDateSelected: (Int, Int, Int) -> Unit
+    onDateSelected: (Int, Int, Int) -> Unit,
+    showDatePicker: MutableState<Boolean>
 ) {
     val context = LocalContext.current
-    DatePickerDialog(
-        context,
-        { _, year, month, dayOfMonth ->
-            onDateSelected(year, month, dayOfMonth)
-        },
-        calendar.get(Calendar.YEAR),
-        calendar.get(Calendar.MONTH),
-        calendar.get(Calendar.DAY_OF_MONTH)
-    ).show()
+
+    if (showDatePicker.value) {
+        val datePickerDialog = DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                onDateSelected(year, month, dayOfMonth)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+
+        datePickerDialog.setOnCancelListener {
+            showDatePicker.value = false
+        }
+
+        LaunchedEffect(datePickerDialog) {
+            datePickerDialog.show()
+        }
+    }
 }
+
 
 
 @Preview(showBackground = true)
