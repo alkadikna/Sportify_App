@@ -54,12 +54,12 @@ fun updateField(cartList: List<Cart>) {
     }
 }
 
-fun saveOrder(cartList: List<Cart>){
+fun saveOrder(cart: Cart){
     val database = FirebaseDatabase.getInstance("https://sportify-3eb54-default-rtdb.asia-southeast1.firebasedatabase.app")
     var auth = FirebaseAuth.getInstance()
     val user = auth.currentUser
     val myRef = database.getReference("users").child(user?.uid!!).child("Order")
-    myRef.setValue(cartList)
+    myRef.push().setValue(cart)
 }
 
 fun getOrder(onComplete: (MutableList<Cart>) -> Unit){
