@@ -73,5 +73,7 @@ fun SplashScreen(onTimeout: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun SplashScreenPreview() {
-    SplashScreen({ Unit })
+    SportifyTheme {
+        SplashScreen({ Unit })
+    }
 }
