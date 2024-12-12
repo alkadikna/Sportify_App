@@ -61,6 +61,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -86,6 +87,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private lateinit var auth: FirebaseAuth;
 private lateinit var googleSignInClient: GoogleSignInClient
@@ -310,9 +312,14 @@ fun AvailableFieldsSection() {
     val startTarget = currentHour + 1
     val endTarget = currentHour + 2
     val today = SimpleDateFormat("dd-MM-yyyy", Locale("id","ID")).format(calendar.time)
+    val isLoading = remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
+        isLoading.value = true
+        kotlinx.coroutines.delay(1000)
         getScheduleByTime("", startTarget, endTarget, today.toString()){ time ->
+            isLoading.value = false
             timeList.addAll(time)
         }
     }
@@ -323,10 +330,9 @@ fun AvailableFieldsSection() {
     ) {
         Row (
             Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ){
-          Icon(
+            Icon(
                 imageVector = Icons.Default.Bolt,
                 contentDescription = "Tersedia Icon",
                 tint = Color.Black ,
@@ -336,88 +342,103 @@ fun AvailableFieldsSection() {
             Text(
                 text = "Lapangan yang tersedia pukul " + formatHour(startTarget),
                 style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
                 fontWeight = FontWeight.SemiBold
             )
+            Spacer(modifier = Modifier.weight(1f))
             IconButton(
                 onClick = {
-                    getScheduleByTime("", startTarget, endTarget, today.toString()){ time ->
-                        timeList.addAll(time)
+                    scope.launch {
+                        isLoading.value = true
+                        kotlinx.coroutines.delay(1000)
+                        getScheduleByTime("", startTarget, endTarget, today.toString()) { time ->
+                            isLoading.value = false
+                            timeList.addAll(time)
+                        }
                     }
                 },
             ) {
                 Icon(
-                    imageVector = Icons.Default.Refresh, contentDescription = null,
+                    imageVector = Icons.Default.Refresh, contentDescription = null, tint = Color.Gray
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(fieldType.size) { index ->
-                Card(
-                    modifier = Modifier
-                        .width(150.dp)
-                        .height(200.dp),
-                    elevation = CardDefaults.elevatedCardElevation(8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.White
-                    )
-                ) {
-                    Column(
+        if(isLoading.value){
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .size(200.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.Gray, modifier = Modifier.size(15.dp))
+            }
+        } else {
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(fieldType.size) { index ->
+                    Card(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .width(150.dp)
+                            .height(200.dp),
+                        elevation = CardDefaults.elevatedCardElevation(8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White
+                        )
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.badminton),
-                            contentDescription = null,
+                        Column(
                             modifier = Modifier
-                                .height(90.dp)
-                                .fillMaxWidth(),
-                            contentScale = ContentScale.Crop
-                        )
-                        Text(
-                            text = fieldType[index],
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 8.dp)
-                        )
-                        
-                        if(timeList.isEmpty()){
-                            Text(
-                                text = "Tidak ada lapangan yang tersedia :(",
-                                fontSize = 12.sp,
-                                modifier = Modifier.padding(horizontal = 5.dp),
-                                textAlign = TextAlign.Center
-
+                                .fillMaxSize()
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.badminton),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .height(90.dp)
+                                    .fillMaxWidth(),
+                                contentScale = ContentScale.Crop
                             )
-                        }
-                        LazyColumn {
-                            items(timeList){ time ->
-                                time.fieldList.forEach{ field ->
-                                    if(field.name.contains(fieldType[index], ignoreCase = true)){
-                                        Text(
-                                            text = field.name,
-                                            fontSize = 12.sp,
-                                            modifier = Modifier
-                                                .padding(horizontal = 5.dp)
-                                        )
-                                    }
-                                    else{
-                                        Text(
-                                            text = "Tidak ada lapangan yang tersedia",
-                                            fontSize = 12.sp,
-                                            modifier = Modifier.padding(horizontal = 5.dp)
-                                        )
+                            Text(
+                                text = fieldType[index],
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 8.dp)
+                            )
+
+                            if(timeList.isEmpty()){
+                                Text(
+                                    text = "Tidak ada lapangan yang tersedia :(",
+                                    fontSize = 12.sp,
+                                    modifier = Modifier.padding(horizontal = 5.dp),
+                                    textAlign = TextAlign.Center
+
+                                )
+                            }
+                            LazyColumn {
+                                items(timeList){ time ->
+                                    time.fieldList.forEach{ field ->
+                                        if(field.name.contains(fieldType[index], ignoreCase = true)){
+                                            Text(
+                                                text = field.name,
+                                                fontSize = 12.sp,
+                                                modifier = Modifier
+                                                    .padding(horizontal = 5.dp)
+                                            )
+                                        }
+                                        else{
+                                            Text(
+                                                text = "Tidak ada lapangan yang tersedia",
+                                                fontSize = 12.sp,
+                                                modifier = Modifier.padding(horizontal = 5.dp)
+                                            )
+                                        }
                                     }
                                 }
                             }
-                        }
 //                        Text(
 //                            text = fieldType[index],
 //                            fontWeight = FontWeight.Bold,
@@ -430,6 +451,7 @@ fun AvailableFieldsSection() {
 //                            color = Color.Gray,
 //                            modifier = Modifier.padding(5.dp)
 //                        )
+                        }
                     }
                 }
             }
@@ -492,7 +514,7 @@ fun UserBookingSection() {
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = colorResource(id = R.color.main_blue))
+                CircularProgressIndicator(color = Color.Gray, modifier = Modifier.size(15.dp))
             }
         } else {
             val validOrders = orderList.filter { order ->
