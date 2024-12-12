@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CheckCircle
@@ -23,6 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -113,7 +117,7 @@ fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
             onDateSelected = { year, month, dayOfMonth ->
                 calendar.set(year, month, dayOfMonth)
                 updateDate("select")
-                showDatePicker.value = false  // Tutup DatePicker setelah pemilihan tanggal
+                showDatePicker.value = false
             },
             showDatePicker = showDatePicker
         )
@@ -190,12 +194,20 @@ fun Form(
                     .fillMaxWidth(),
                 label = { Text("Waktu Mulai") },
                 placeholder = { Text("Contoh: 10") },
+                trailingIcon = {
+                    Text(
+                        text = ":00",
+                        style = MaterialTheme.typography.body1,
+                        color = Color.Gray
+                    )
+                },
                 colors = TextFieldDefaults.colors(
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedContainerColor = Color.White
                 )
             )
+
             TextField(
                 value = endTime,
                 onValueChange = { endTime = it },
@@ -206,12 +218,20 @@ fun Form(
                     .fillMaxWidth(),
                 label = { Text("Waktu Selesai") },
                 placeholder = { Text("Contoh: 12") },
+                trailingIcon = {
+                    Text(
+                        text = ":00",
+                        style = MaterialTheme.typography.body1,
+                        color = Color.Gray
+                    )
+                },
                 colors = TextFieldDefaults.colors(
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedContainerColor = Color.White
                 )
             )
+
             Button(
                 onClick = {
                     if (startTime.isNotEmpty() && endTime.isNotEmpty()) {
@@ -268,7 +288,7 @@ fun Form(
                 colors = ButtonDefaults.buttonColors(Color(0xFF54BDFE)),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Cari", color = Color.Black, fontSize = 15.sp)
+                Text("Cari", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
             }
         }
     }

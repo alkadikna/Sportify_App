@@ -19,8 +19,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.TextButton
@@ -32,6 +35,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Surface
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -275,17 +279,40 @@ fun TableScreen(
             .padding(horizontal = 16.dp)
     ) {
         // Header tanggal
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            IconButton(onClick = { onDateChange("previous") }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Previous")
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 5.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            IconButton(
+                onClick = { onDateChange("previous") },
+                modifier = Modifier
+                    .background(Color.Black, shape = CircleShape)
+                    .size(40.dp)
+            ) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Previous", tint = Color.White)
             }
             TextButton(onClick = { showDatePicker.value = true }) {
-                Text(text = "Jadwal: $selectedDate", style = MaterialTheme.typography.h6)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarMonth,
+                        contentDescription = "Calendar Icon",
+                        tint = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = selectedDate, style = MaterialTheme.typography.h6, color = Color.Gray)
+                }
             }
-            IconButton(onClick = { onDateChange("next") }) {
-                Icon(Icons.Default.ArrowForward, contentDescription = "Next")
+            IconButton(
+                onClick = { onDateChange("next") },
+                modifier = Modifier
+                    .background(Color.Black, shape = CircleShape)
+                    .size(40.dp)
+            ) {
+                Icon(Icons.Default.ArrowForward, contentDescription = "Next", tint = Color.White)
             }
         }
+        
+        Spacer(modifier = Modifier.height(10.dp))
 
         if (isLoading.value) {
             Box(
@@ -294,7 +321,7 @@ fun TableScreen(
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = colorResource(id = R.color.main_blue))
+                CircularProgressIndicator(color = Color.Gray)
             }
         } else {
             // Header kolom
@@ -343,7 +370,7 @@ fun TableScreen(
 fun RowScope.TableCellParent(
     text: String,
     weight: Float,
-    backgroundColor: Color = Color(0xFF5AB5FF)
+    backgroundColor: Color = colorResource(id = R.color.main_blue)
 ) {
     Box(
         Modifier
@@ -352,7 +379,7 @@ fun RowScope.TableCellParent(
             .background(backgroundColor)
             .padding(8.dp)
     ) {
-        Text(text = text, style = MaterialTheme.typography.body2, textAlign = TextAlign.Center)
+        Text(text = text, style = MaterialTheme.typography.body2, textAlign = TextAlign.Center, color = Color.Black, fontWeight = FontWeight.Bold)
     }
 }
 

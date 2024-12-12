@@ -115,28 +115,28 @@ public fun BottomNavigationBar(modifier: Modifier = Modifier, navController: Nav
             modifier = Modifier.padding(top = 5.dp)
         )
 
-        BottomNavigationItem(
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_bell), // Replace with your resource
-                    contentDescription = "Notifications",
-                    tint = if (selectedIndex == 3) colorResource(id = R.color.main_blue) else Color.Black
-                )
-            },
-            label = {
-                Text(
-                    text = "Notifikasi",
-                    fontSize = 11.sp,
-                    color = if (selectedIndex == 3) colorResource(id = R.color.main_blue) else Color.Black
-                )
-            },
-            selected = selectedIndex == 3,
-            onClick = {
-                selectedIndex = 3
-                navController.navigate("notifikasi")
-                      },
-            modifier = Modifier.padding(top = 5.dp)
-        )
+//        BottomNavigationItem(
+//            icon = {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.ic_bell), // Replace with your resource
+//                    contentDescription = "Notifications",
+//                    tint = if (selectedIndex == 3) colorResource(id = R.color.main_blue) else Color.Black
+//                )
+//            },
+//            label = {
+//                Text(
+//                    text = "Notifikasi",
+//                    fontSize = 11.sp,
+//                    color = if (selectedIndex == 3) colorResource(id = R.color.main_blue) else Color.Black
+//                )
+//            },
+//            selected = selectedIndex == 3,
+//            onClick = {
+//                selectedIndex = 3
+//                navController.navigate("notifikasi")
+//                      },
+//            modifier = Modifier.padding(top = 5.dp)
+//        )
 
         BottomNavigationItem(
             icon = {

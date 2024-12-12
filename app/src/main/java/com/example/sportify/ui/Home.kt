@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,58 +24,73 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Surface
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
+import androidx.compose.material.Surface
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Bookmarks
+import androidx.compose.material.icons.filled.CrisisAlert
+import androidx.compose.material.icons.filled.Gesture
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.sportify.Model.Field
 import com.example.sportify.Model.Time
 import com.example.sportify.R
+import com.example.sportify.Repository.FetchScheduleData
 import com.example.sportify.Repository.getOrder
 import com.example.sportify.Repository.getScheduleByTime
 import com.example.sportify.layout_component.BottomNavigationBar
 import com.example.sportify.layout_component.TopSection
 import com.example.sportify.ui.theme.SportifyTheme
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-private lateinit var auth: FirebaseAuth
+private lateinit var auth: FirebaseAuth;
 private lateinit var googleSignInClient: GoogleSignInClient
 private lateinit var database: FirebaseDatabase;
 
@@ -118,7 +134,7 @@ fun HomeLayout(navCtrl: NavController, auth: FirebaseAuth) {
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp)
-                        .padding(top = 20.dp)
+                        .padding(top = 30.dp)
                 ) {
                     item { Spacer(modifier = Modifier.height(16.dp)) }
 
@@ -145,7 +161,7 @@ fun FloatingSearchBarLayout(userName : String) {
         WelcomeBox(userName = userName,
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset(y = 60.dp)
+                .offset(y = 70.dp)
         )
     }
 }
@@ -202,10 +218,20 @@ fun FieldTypeSection(navCtrl: NavController) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(
-            text = "Pilih Jenis Lapangan",
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Row{
+            Icon(
+                imageVector = Icons.Default.Gesture,
+                contentDescription = "Gesture Icon",
+                tint = Color.Black ,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Pilih jenis lapangan",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
 
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
@@ -217,7 +243,7 @@ fun FieldTypeSection(navCtrl: NavController) {
                 "Futsal" to R.drawable.futsal,
                 "Tennis" to R.drawable.tennis,
                 "Basket" to R.drawable.basket,
-                "Soon" to null // placeholder
+                "Coming Soon" to null // placeholder
             )
 
             items(fieldTypes) { (type, imageRes) ->
@@ -254,7 +280,7 @@ fun FieldTypeSection(navCtrl: NavController) {
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
-                                    text = "S",
+                                    text = "CS",
                                     fontSize = 20.sp,
                                     color = Color.White
                                 )
@@ -287,9 +313,14 @@ fun AvailableFieldsSection() {
     val startTarget = currentHour + 1
     val endTarget = currentHour + 2
     val today = SimpleDateFormat("dd-MM-yyyy", Locale("id","ID")).format(calendar.time)
+    val isLoading = remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
+        isLoading.value = true
+        kotlinx.coroutines.delay(1000)
         getScheduleByTime("", startTarget, endTarget, today.toString()){ time ->
+            isLoading.value = false
             timeList.addAll(time)
         }
     }
@@ -300,95 +331,115 @@ fun AvailableFieldsSection() {
     ) {
         Row (
             Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ){
-            Text(
-                text = "Lapangan yang tersedia pada pukul " + formatHour(startTarget),
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f)
+            Icon(
+                imageVector = Icons.Default.Bolt,
+                contentDescription = "Tersedia Icon",
+                tint = Color.Black ,
+                modifier = Modifier.size(22.dp)
             )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Lapangan yang tersedia pukul " + formatHour(startTarget),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.weight(1f))
             IconButton(
                 onClick = {
-                    getScheduleByTime("", startTarget, endTarget, today.toString()){ time ->
-                        timeList.addAll(time)
+                    scope.launch(Dispatchers.IO) {
+                        isLoading.value = true
+                        kotlinx.coroutines.delay(1000)
+                        getScheduleByTime("", startTarget, endTarget, today.toString()) { time ->
+                            isLoading.value = false
+                            timeList.addAll(time)
+                        }
                     }
                 },
             ) {
                 Icon(
-                    imageVector = Icons.Default.Refresh, contentDescription = null,
+                    imageVector = Icons.Default.Refresh, contentDescription = null, tint = Color.Gray
                 )
             }
         }
-        
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(fieldType.size) { index ->
-                Card(
-                    modifier = Modifier
-                        .width(150.dp)
-                        .height(200.dp),
-                    elevation = CardDefaults.elevatedCardElevation(8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.White
-                    )
-                ) {
-                    Column(
+        if(isLoading.value){
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .size(200.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.Gray, modifier = Modifier.size(15.dp))
+            }
+        } else {
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(fieldType.size) { index ->
+                    Card(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .width(150.dp)
+                            .height(200.dp),
+                        elevation = CardDefaults.elevatedCardElevation(8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White
+                        )
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.badminton),
-                            contentDescription = null,
+                        Column(
                             modifier = Modifier
-                                .height(90.dp)
-                                .fillMaxWidth(),
-                            contentScale = ContentScale.Crop
-                        )
-                        Text(
-                            text = fieldType[index],
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 8.dp)
-                        )
-                        
-                        if(timeList.isEmpty()){
-                            Text(
-                                text = "Tidak ada lapangan yang tersedia :(",
-                                fontSize = 12.sp,
-                                modifier = Modifier.padding(horizontal = 5.dp),
-                                textAlign = TextAlign.Center
-
+                                .fillMaxSize()
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.badminton),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .height(90.dp)
+                                    .fillMaxWidth(),
+                                contentScale = ContentScale.Crop
                             )
-                        }
-                        LazyColumn {
-                            items(timeList){ time ->
-                                time.fieldList.forEach{ field ->
-                                    if(field.name.contains(fieldType[index], ignoreCase = true)){
-                                        Text(
-                                            text = field.name,
-                                            fontSize = 12.sp,
-                                            modifier = Modifier
-                                                .padding(horizontal = 5.dp)
-                                        )
-                                    }
-                                    else{
-                                        Text(
-                                            text = "Tidak ada lapangan yang tersedia",
-                                            fontSize = 12.sp,
-                                            modifier = Modifier.padding(horizontal = 5.dp)
-                                        )
+                            Text(
+                                text = fieldType[index],
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 8.dp)
+                            )
+
+                            if(timeList.isEmpty()){
+                                Text(
+                                    text = "Tidak ada lapangan yang tersedia :(",
+                                    fontSize = 12.sp,
+                                    modifier = Modifier.padding(horizontal = 5.dp),
+                                    textAlign = TextAlign.Center
+
+                                )
+                            }
+                            LazyColumn {
+                                items(timeList){ time ->
+                                    time.fieldList.forEach{ field ->
+                                        if(field.name.contains(fieldType[index], ignoreCase = true)){
+                                            Text(
+                                                text = field.name,
+                                                fontSize = 12.sp,
+                                                modifier = Modifier
+                                                    .padding(horizontal = 5.dp)
+                                            )
+                                        }
+                                        else{
+                                            Text(
+                                                text = "Tidak ada lapangan yang tersedia",
+                                                fontSize = 12.sp,
+                                                modifier = Modifier.padding(horizontal = 5.dp)
+                                            )
+                                        }
                                     }
                                 }
                             }
-                        }
 //                        Text(
 //                            text = fieldType[index],
 //                            fontWeight = FontWeight.Bold,
@@ -401,6 +452,7 @@ fun AvailableFieldsSection() {
 //                            color = Color.Gray,
 //                            modifier = Modifier.padding(5.dp)
 //                        )
+                        }
                     }
                 }
             }
@@ -411,70 +463,129 @@ fun AvailableFieldsSection() {
 @Composable
 fun UserBookingSection() {
     val orderList = remember { mutableStateListOf<Cart>() }
+    val isLoading = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
+        isLoading.value = true
+        kotlinx.coroutines.delay(1000)
         getOrder { orders ->
+            isLoading.value = false
             orderList.clear()  // Clear previous orders
             orderList.addAll(orders)  // Add new orders
         }
     }
 
     Column {
-        Text(text = "Pesanan anda", style = MaterialTheme.typography.bodyLarge)
+        Row{
+            Icon(
+                imageVector = Icons.Default.Bookmarks,
+                contentDescription = "Reservasi Icon",
+                tint = Color.Black ,
+                modifier = Modifier.size(15.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Reservasi anda",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // Sample bookings
+//        listOf(
+//            "Lapangan Badminton A3, Selasa 03 Okt 2023, 16:00 - 18:00",
+//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
+//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
+//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
+//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
+//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
+//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
+//        ).
         Log.d("OrderList", "Orderlist: $orderList")
         val calendar = Calendar.getInstance()
         val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
         val currentMinute = calendar.get(Calendar.MINUTE)
-        val today = SimpleDateFormat("dd-MM-yyyy", Locale("id","ID")).format(calendar.time)
 
+        if(isLoading.value){
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.Gray, modifier = Modifier.size(15.dp))
+            }
+        } else {
+            val validOrders = orderList.filter { order ->
+                val targetTime = (order.endTime.toInt() * 60)
+                val currentTime = (currentHour * 60) + currentMinute
+                currentTime < targetTime
+            }
 
-        orderList.forEach { order ->
-            val targetTime = (order.endTime.toInt() * 60)
-            val currentTime = (currentHour * 60) + currentMinute
-
-            if(order.date >= today.toString()){
-                if(currentTime < targetTime){
-                    UserBookingCard(order = order)
+            if (validOrders.isEmpty()) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Icon(
+                            imageVector = Icons.Default.CrisisAlert,
+                            contentDescription = "No Reservations Icon",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Anda belum memiliki reservasi",
+                            fontSize = 16.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
+            } else {
+                validOrders.forEach { order ->
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        color = Color.White,
+                        elevation = 4.dp
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.sample_field), // Replace with your image resource
+                                contentDescription = "Field Image",
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(text = order.name, fontSize = 14.sp)
+                                Text(text = order.date, fontSize = 14.sp)
+                                Text(text = formatHour(order.startTime.toInt()) + "-" + formatHour(order.endTime.toInt()), fontSize = 14.sp)
+                            }
+                            Spacer(modifier = Modifier.weight(1f))
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowRight, // Replace with your arrow icon resource
+                                contentDescription = "Arrow Icon"
+                            )
+                        }
+                    }
                 }
             }
         }
-    }
-}
 
-@Composable
-fun UserBookingCard(order: Cart){
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        color = Color.White,
-        elevation = 4.dp
-    ) {
-        Row(
-            modifier = Modifier.padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.sample_field), // Replace with your image resource
-                contentDescription = "Field Image",
-                modifier = Modifier.size(48.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(text = order.name, fontSize = 14.sp)
-                Text(text = order.date, fontSize = 14.sp)
-                Text(text = formatHour(order.startTime.toInt()) + "-" + formatHour(order.endTime.toInt()), fontSize = 14.sp)
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowRight, // Replace with your arrow icon resource
-                contentDescription = "Arrow Icon",
-            )
-        }
     }
 }
 
