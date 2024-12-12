@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +42,7 @@ private lateinit var auth: FirebaseAuth
 private lateinit var googleSignInClient: GoogleSignInClient
 private lateinit var database: FirebaseDatabase
 
+@SuppressLint("UnrememberedMutableState")
 @Composable
 fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
     // State for selected date
@@ -48,17 +50,18 @@ fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
     val selectedDate = remember {
         mutableStateOf(
             SimpleDateFormat("dd-MM-yyyy", Locale("id","ID")).format(calendar.time)
-        ) }
+        )
+    }
 
     val context = LocalContext.current
-    var isDropdownOpen by remember { mutableStateOf(false) } // Control Modal visibility
+    var isDropdownOpen by remember { mutableStateOf(false) }
+    val showDatePicker = remember { mutableStateOf(false) }
 
     // Function to update date
     fun updateDate(action: String) {
         when (action) {
             "previous" -> calendar.add(Calendar.DAY_OF_MONTH, -1)
             "next" -> calendar.add(Calendar.DAY_OF_MONTH, 1)
-            "select" -> { /* Handled by DatePicker */ }
         }
         val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale("id", "ID"))
         selectedDate.value = dateFormat.format(calendar.time)
@@ -92,16 +95,7 @@ fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
                     selectedDate = selectedDate,
                     onDateChange = { action ->
                         if (action == "select") {
-                            DatePickerDialog(
-                                context,
-                                { _, year, month, dayOfMonth ->
-                                    calendar.set(year, month, dayOfMonth)
-                                    updateDate("") // Reformat date after selection
-                                },
-                                calendar.get(Calendar.YEAR),
-                                calendar.get(Calendar.MONTH),
-                                calendar.get(Calendar.DAY_OF_MONTH)
-                            ).show()
+                            showDatePicker.value = true
                         } else {
                             updateDate(action) // Previous or Next
                         }
@@ -112,6 +106,18 @@ fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
             }
         }
     )
+
+    if (showDatePicker.value) {
+        ShowDatePicker(
+            calendar = calendar,
+            onDateSelected = { year, month, dayOfMonth ->
+                calendar.set(year, month, dayOfMonth)
+                updateDate("select")
+                showDatePicker.value = false  // Tutup DatePicker setelah pemilihan tanggal
+            },
+            showDatePicker = showDatePicker
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -129,6 +135,14 @@ fun Form(
     var endTime by remember { mutableStateOf("") }
     val nContext = LocalContext.current
 
+    val calendar = Calendar.getInstance()
+    val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
+    val currentMinute = calendar.get(Calendar.MINUTE)
+    val today = remember {
+        mutableStateOf(
+            SimpleDateFormat("dd-MM-yyyy", Locale("id","ID")).format(calendar.time)
+        )
+    }
     if (isDropdownOpen) {
         ModalBottomSheet(
             onDismissRequest = { setIsDropdownOpen(false) }, // Close the dropdown when dismissed
@@ -203,7 +217,33 @@ fun Form(
                     if (startTime.isNotEmpty() && endTime.isNotEmpty()) {
                         val isValid = startTime.toIntOrNull() != null && endTime.toIntOrNull() != null
                         if (isValid) {
-                            navCtrl.navigate("result/$selectedSport/$startTime/$endTime/${selectedDate.value}")
+                            if(startTime < endTime){
+                                if(selectedDate.value == today.value){
+                                    val targetTime = (startTime.toInt() * 60)
+                                    val currentTime = (currentHour * 60) + currentMinute
+                                    if(currentTime < targetTime){
+                                        navCtrl.navigate("result/$selectedSport/$startTime/$endTime/${selectedDate.value}")
+                                    }
+                                    else{
+                                        Toast.makeText(
+                                            nContext,
+                                            "Waktu awal tidak valid!",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                }
+                                else{
+                                    navCtrl.navigate("result/$selectedSport/$startTime/$endTime/${selectedDate.value}")
+                                }
+
+                            }
+                            else{
+                                Toast.makeText(
+                                    nContext,
+                                    "Waktu awal harus lebih kecil dari waktu akhir!",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
                         } else {
                             Toast.makeText(
                                 nContext,
@@ -211,6 +251,7 @@ fun Form(
                                 Toast.LENGTH_LONG
                             ).show()
                         }
+
                     } else {
                         Toast.makeText(
                             nContext,
