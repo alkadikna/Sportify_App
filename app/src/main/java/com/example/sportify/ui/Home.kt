@@ -235,7 +235,8 @@ fun FieldTypeSection(navCtrl: NavController) {
                            modifier = Modifier
                                .size(64.dp)
                                .clip(CircleShape)
-                               .border(1.dp, Color.Gray, CircleShape)
+                               .border(1.dp, Color.Gray, CircleShape),
+                           contentPadding = PaddingValues(0.dp)
                        ) {
                            Image(
                               painter = painterResource(id = imageRes),

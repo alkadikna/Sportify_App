@@ -1,6 +1,7 @@
 package com.example.sportify.ui
 
 import android.app.DatePickerDialog
+import android.content.Context
 import android.util.Log
 import android.widget.DatePicker
 import android.widget.Toast
@@ -80,19 +81,44 @@ fun ScheduleLayout(navCtrl: NavController) {
     }
     val showDatePicker = remember { mutableStateOf(false) }
     val selectedFieldType = remember { mutableStateOf("Badminton") }
+    val context = LocalContext.current
 
 
     // Fungsi untuk memperbarui tanggal
-    fun updateDate(action: String) {
-        when (action) {
-            "previous" -> calendar.add(Calendar.DAY_OF_MONTH, -1) // Kurangi 1 hari
-            "next" -> calendar.add(Calendar.DAY_OF_MONTH, 1) // Tambah 1 hari
+    fun updateDate(action: String, context: Context) {
+        val currentDate = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
         }
-        selectedDate.value = dateFormat.format(calendar.time)
-        formattedDate.value = outputFormat.format(calendar.time)
-        Log.d("Tanggal", "Tanggal data berubah: $selectedDate atau $formattedDate")
 
+        val oneWeekLater = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.DAY_OF_MONTH, 7)
+        }
+
+        val newDate = Calendar.getInstance().apply {
+            time = calendar.time
+            when (action) {
+                "previous" -> add(Calendar.DAY_OF_MONTH, -1) // Kurangi 1 hari
+                "next" -> add(Calendar.DAY_OF_MONTH, 1) // Tambah 1 hari
+            }
+        }
+
+        if (newDate.before(currentDate) || newDate.after(oneWeekLater)) {
+            Toast.makeText(context, "Jadwal tidak tersedia.", Toast.LENGTH_SHORT).show()
+        } else {
+            calendar.time = newDate.time
+            selectedDate.value = dateFormat.format(calendar.time)
+            formattedDate.value = outputFormat.format(calendar.time)
+            Log.d("Tanggal", "Tanggal data berubah: ${selectedDate.value} atau ${formattedDate.value}")
+        }
     }
+
 
     Scaffold(
         topBar = { FloatingDropDown(selectedFieldType) },
@@ -117,7 +143,7 @@ fun ScheduleLayout(navCtrl: NavController) {
                             // Tampilkan DatePicker
                             showDatePicker.value = true
                         } else {
-                            updateDate(action) // Previous atau Next
+                            updateDate(action, context) // Previous atau Next
                         }
                     }
                 )
@@ -356,7 +382,8 @@ fun RowScope.TableCell(
 fun ShowDatePicker(
     calendar: Calendar,
     onDateSelected: (Int, Int, Int) -> Unit,
-    showDatePicker: MutableState<Boolean>
+    showDatePicker: MutableState<Boolean>,
+    onDismissRequest: () -> Unit = { showDatePicker.value = false }
 ) {
     val context = LocalContext.current
 
@@ -365,14 +392,35 @@ fun ShowDatePicker(
             context,
             { _, year, month, dayOfMonth ->
                 onDateSelected(year, month, dayOfMonth)
+                showDatePicker.value = false
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         )
 
+        // Set the minimum date to today
+        val currentDate = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        datePickerDialog.datePicker.minDate = currentDate.timeInMillis
+
+        // Set the maximum date to one week from today
+        val oneWeekLater = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.DAY_OF_MONTH, 7)
+        }
+        datePickerDialog.datePicker.maxDate = oneWeekLater.timeInMillis
+
         datePickerDialog.setOnCancelListener {
             showDatePicker.value = false
+            onDismissRequest()
         }
 
         LaunchedEffect(datePickerDialog) {
@@ -380,6 +428,7 @@ fun ShowDatePicker(
         }
     }
 }
+
 
 
 
