@@ -263,56 +263,6 @@ fun DropdownItem(label: String, onClick: () -> Unit) {
 }
 
 @Composable
-fun ShowDatePicker2(
-    calendar: Calendar,
-    onDateSelected: (Int, Int, Int) -> Unit,
-    showDatePicker: MutableState<Boolean>
-) {
-    val context = LocalContext.current
-
-    if (showDatePicker.value) {
-        val datePickerDialog = DatePickerDialog(
-            context,
-            { _, year, month, dayOfMonth ->
-                onDateSelected(year, month, dayOfMonth)
-                showDatePicker.value = false
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-
-        // Set the minimum date to today
-        val currentDate = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        datePickerDialog.datePicker.minDate = currentDate.timeInMillis
-
-        // Set the maximum date to one week from today
-        val oneWeekLater = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-            add(Calendar.DAY_OF_MONTH, 7)
-        }
-        datePickerDialog.datePicker.maxDate = oneWeekLater.timeInMillis
-
-        datePickerDialog.setOnCancelListener {
-            showDatePicker.value = false
-        }
-
-        LaunchedEffect(datePickerDialog) {
-            datePickerDialog.show()
-        }
-    }
-}
-
-
-@Composable
 fun CustomDropdownMenuContent(
     items: List<String>,
     onSelect: (String) -> Unit,
