@@ -48,7 +48,8 @@ fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
     val selectedDate = remember {
         mutableStateOf(
             SimpleDateFormat("dd-MM-yyyy", Locale("id","ID")).format(calendar.time)
-        ) }
+        )
+    }
 
     val context = LocalContext.current
     var isDropdownOpen by remember { mutableStateOf(false) } // Control Modal visibility

@@ -24,7 +24,7 @@ fun BottomSheet(onSelectSport: (String) -> Unit) {
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Cabang Olahraga", fontSize = 20.sp, color = Color.Black)
         Spacer(modifier = Modifier.height(16.dp))
-        val sports = listOf("Badminton", "Basket", "Tennis", "Futsal")
+        val sports = listOf("Badminton", "Basket", "Tenis", "Futsal")
         sports.forEach { sport ->
             Row(
                 modifier = Modifier

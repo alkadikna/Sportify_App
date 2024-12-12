@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.Button
 import androidx.compose.material.Surface
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -62,10 +63,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.sportify.Model.Time
 import com.example.sportify.R
+import com.example.sportify.Repository.FetchScheduleData
 import com.example.sportify.Repository.getOrder
 import com.example.sportify.layout_component.BottomNavigationBar
 import com.example.sportify.layout_component.TopSection
 import com.example.sportify.ui.theme.SportifyTheme
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
@@ -120,7 +125,7 @@ fun HomeLayout(navCtrl: NavController, auth: FirebaseAuth) {
                     item { Spacer(modifier = Modifier.height(16.dp)) }
 
                     // Field types section
-                    item { FieldTypeSection() }
+                    item { FieldTypeSection(navCtrl) }
                     item { Spacer(modifier = Modifier.height(16.dp)) }
 
                     // Available fields section
@@ -184,7 +189,17 @@ fun WelcomeBox(userName: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun FieldTypeSection() {
+fun FieldTypeSection(navCtrl: NavController) {
+
+    val calendar = remember { Calendar.getInstance() }
+    val selectedDate = remember {
+        mutableStateOf(
+            SimpleDateFormat("dd-MM-yyyy", Locale("id","ID")).format(calendar.time)
+        )
+    }
+    val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale("id", "ID"))
+    selectedDate.value = dateFormat.format(calendar.time)
+
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxWidth()
@@ -213,15 +228,24 @@ fun FieldTypeSection() {
                     modifier = Modifier.padding(vertical = 10.dp)
                 ) {
                     if (imageRes != null) {
-                        Image(
-                            painter = painterResource(id = imageRes),
-                            contentDescription = "$type Image",
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(CircleShape)
-                                .border(1.dp, Color.Gray, CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
+                       Button(
+                           onClick = {
+                               navCtrl.navigate("result/$type/0/0/${selectedDate.value}")
+                           },
+                           modifier = Modifier
+                               .size(64.dp)
+                               .clip(CircleShape)
+                               .border(1.dp, Color.Gray, CircleShape)
+                       ) {
+                           Image(
+                              painter = painterResource(id = imageRes),
+                              contentDescription = "$type Image",
+                              modifier = Modifier
+                                  .size(64.dp)
+                                  .clip(CircleShape),
+                              contentScale = ContentScale.Crop
+                           )
+                       }
                     } else {
                         // placeholder
                         Surface(
