@@ -407,7 +407,7 @@ fun BottomPaymentSection(navCtrl: NavController, totalPrice: Double, cartList: L
                     text = "Pesan",
                     style = TextStyle(
                         fontSize = 15.sp,
-                        color = Color.Black,
+                        color = Color.White,
                         fontFamily = FontFamily(Font(R.font.poppins_semi_bold)),
                     ),
                 )

@@ -24,10 +24,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
 import androidx.compose.material.Surface
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Bookmarks
+import androidx.compose.material.icons.filled.CrisisAlert
+import androidx.compose.material.icons.filled.Gesture
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Scaffold
@@ -120,7 +125,7 @@ fun HomeLayout(navCtrl: NavController, auth: FirebaseAuth) {
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp)
-                        .padding(top = 20.dp)
+                        .padding(top = 30.dp)
                 ) {
                     item { Spacer(modifier = Modifier.height(16.dp)) }
 
@@ -147,7 +152,7 @@ fun FloatingSearchBarLayout(userName : String) {
         WelcomeBox(userName = userName,
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset(y = 60.dp)
+                .offset(y = 70.dp)
         )
     }
 }
@@ -204,10 +209,20 @@ fun FieldTypeSection(navCtrl: NavController) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(
-            text = "Pilih Jenis Lapangan",
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Row{
+            Icon(
+                imageVector = Icons.Default.Gesture,
+                contentDescription = "Gesture Icon",
+                tint = Color.Black ,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Pilih jenis lapangan",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
 
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
@@ -219,7 +234,7 @@ fun FieldTypeSection(navCtrl: NavController) {
                 "Futsal" to R.drawable.futsal,
                 "Tennis" to R.drawable.tennis,
                 "Basket" to R.drawable.basket,
-                "Soon" to null // placeholder
+                "Coming Soon" to null // placeholder
             )
 
             items(fieldTypes) { (type, imageRes) ->
@@ -256,7 +271,7 @@ fun FieldTypeSection(navCtrl: NavController) {
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
-                                    text = "S",
+                                    text = "CS",
                                     fontSize = 20.sp,
                                     color = Color.White
                                 )
@@ -284,10 +299,20 @@ fun AvailableFieldsSection() {
         modifier = Modifier
             .fillMaxWidth()
     ) {
-        Text(
-            text = "Lapangan yang tersedia",
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Row{
+            Icon(
+                imageVector = Icons.Default.Bolt,
+                contentDescription = "Tersedia Icon",
+                tint = Color.Black ,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Lapangan yang tersedia",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -342,16 +367,33 @@ fun AvailableFieldsSection() {
 @Composable
 fun UserBookingSection() {
     val orderList = remember { mutableStateListOf<Cart>() }
+    val isLoading = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
+        isLoading.value = true
+        kotlinx.coroutines.delay(1000)
         getOrder { orders ->
+            isLoading.value = false
             orderList.clear()  // Clear previous orders
             orderList.addAll(orders)  // Add new orders
         }
     }
 
     Column {
-        Text(text = "Pesanan anda", style = MaterialTheme.typography.bodyLarge)
+        Row{
+            Icon(
+                imageVector = Icons.Default.Bookmarks,
+                contentDescription = "Reservasi Icon",
+                tint = Color.Black ,
+                modifier = Modifier.size(15.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Reservasi anda",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -370,42 +412,84 @@ fun UserBookingSection() {
         val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
         val currentMinute = calendar.get(Calendar.MINUTE)
 
-        orderList.forEach { order ->
-            val targetTime = (order.endTime.toInt() * 60)
-            val currentTime = (currentHour * 60) + currentMinute
-            if(currentTime < targetTime){
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    color = Color.White,
-                    elevation = 4.dp
+        if(isLoading.value){
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = colorResource(id = R.color.main_blue))
+            }
+        } else {
+            val validOrders = orderList.filter { order ->
+                val targetTime = (order.endTime.toInt() * 60)
+                val currentTime = (currentHour * 60) + currentMinute
+                currentTime < targetTime
+            }
+
+            if (validOrders.isEmpty()) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(
-                        modifier = Modifier.padding(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.sample_field), // Replace with your image resource
-                            contentDescription = "Field Image",
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Icon(
+                            imageVector = Icons.Default.CrisisAlert,
+                            contentDescription = "No Reservations Icon",
+                            tint = Color.Gray,
                             modifier = Modifier.size(48.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(text = order.name, fontSize = 14.sp)
-                            Text(text = order.date, fontSize = 14.sp)
-                            Text(text = formatHour(order.startTime.toInt()) + "-" + formatHour(order.endTime.toInt()), fontSize = 14.sp)
-                        }
-                        Spacer(modifier = Modifier.weight(1f))
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowRight, // Replace with your arrow icon resource
-                            contentDescription = "Arrow Icon",
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Anda belum memiliki reservasi",
+                            fontSize = 16.sp,
+                            color = Color.Gray
                         )
+                    }
+                }
+            } else {
+                validOrders.forEach { order ->
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        color = Color.White,
+                        elevation = 4.dp
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.sample_field), // Replace with your image resource
+                                contentDescription = "Field Image",
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(text = order.name, fontSize = 14.sp)
+                                Text(text = order.date, fontSize = 14.sp)
+                                Text(text = formatHour(order.startTime.toInt()) + "-" + formatHour(order.endTime.toInt()), fontSize = 14.sp)
+                            }
+                            Spacer(modifier = Modifier.weight(1f))
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowRight, // Replace with your arrow icon resource
+                                contentDescription = "Arrow Icon"
+                            )
+                        }
                     }
                 }
             }
         }
+
     }
 }
 

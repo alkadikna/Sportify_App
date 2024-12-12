@@ -2,6 +2,7 @@ package com.example.sportify.ui
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,12 +18,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.IconButton
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -42,8 +45,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.sportify.Model.Field
 import com.example.sportify.Model.Time
@@ -100,6 +106,9 @@ fun TestingReadDB(navCtrl: NavController, fieldType: String, start: Int, end: In
                                         endTime = time.endTime,
                                         addCart = { item ->
                                             cartList.add(item)
+                                        },
+                                        removeCart = { item ->
+                                            cartList.remove(item)
                                         }
                                     )
                                 }
@@ -130,9 +139,15 @@ fun formatHour(hour: Int): String {
 }
 
 @Composable
-fun FieldItem(field: Field, selectedDate: String, startTime: Int, endTime: Int, addCart: (Cart) -> Unit) {
-
-    val cartList = remember { mutableStateListOf<Cart>() }
+fun FieldItem(field: Field, selectedDate: String, startTime: Int, endTime: Int, addCart: (Cart) -> Unit, removeCart: (Cart) -> Unit) {
+    val isAdded = remember { mutableStateOf(false) }
+    val cartItem = Cart(
+        field.name,
+        selectedDate,
+        startTime.toString(),
+        endTime.toString(),
+        field.price.toDouble()
+    )
 
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -140,7 +155,10 @@ fun FieldItem(field: Field, selectedDate: String, startTime: Int, endTime: Int, 
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 30.dp)
-            .padding(vertical = 10.dp)
+            .padding(vertical = 10.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        )
     ) {
         Row(
             modifier = Modifier
@@ -168,24 +186,29 @@ fun FieldItem(field: Field, selectedDate: String, startTime: Int, endTime: Int, 
                     text = "${formatHour(startTime)} - ${formatHour(endTime)}",
                 )
             }
-            // Ikon Panah
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add to Cart",
+            // Ikon
+            Box(
                 modifier = Modifier
-                    .size(24.dp)
+                    .size(20.dp)
+                    .clip(CircleShape)
+                    .background(if (isAdded.value) colorResource(id = R.color.main_blue) else Color.Transparent)
                     .clickable {
-                        addCart(
-                            Cart(
-                                field.name,
-                                selectedDate,
-                                startTime.toString(),
-                                endTime.toString(),
-                                field.price.toDouble()
-                            )
-                        )
-                    }
-            )
+                        if (isAdded.value) {
+                            removeCart(cartItem)
+                        } else {
+                            addCart(cartItem)
+                        }
+                        isAdded.value = !isAdded.value
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (isAdded.value) Icons.Default.Check else Icons.Default.Add,
+                    contentDescription = "Toggle Cart",
+                    tint = if (isAdded.value) Color.White else Color.Black,
+                    modifier = if (isAdded.value) Modifier.size(16.dp) else Modifier.size(24.dp)
+                )
+            }
         }
     }
 }

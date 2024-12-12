@@ -82,7 +82,7 @@ class MainActivity : ComponentActivity() {
 //                    composable("notifikasi"){ NotificationScreen(navCtrl = navController) }
                 }
                 LaunchedEffect(Unit) {
-                    //InitDb()
+//                    InitDb()
                     deleteOutdatedSchedule()
 //                    deleteOutdatedTimes()s
                 }
