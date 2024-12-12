@@ -155,6 +155,8 @@ fun ProfileLayout(navController: NavController, auth: FirebaseAuth) {
 
                 //Log Out
                 LogoutButton(navController, auth, context)
+                
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }
