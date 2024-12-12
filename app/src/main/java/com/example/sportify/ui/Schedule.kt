@@ -2,6 +2,7 @@ package com.example.sportify.ui
 
 import android.app.DatePickerDialog
 import android.util.Log
+import android.widget.DatePicker
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -28,9 +29,13 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.IconButton
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Surface
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -42,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -49,8 +55,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.sportify.R
 import com.example.sportify.Repository.FetchScheduleData
 import com.example.sportify.layout_component.BottomNavigationBar
 import com.example.sportify.layout_component.TopSection
@@ -210,9 +218,13 @@ fun TableScreen(
     val showDatePicker = remember { mutableStateOf(false) }
     val calendar = Calendar.getInstance()
     val reservations = remember { mutableStateOf<Map<String, Map<String, String>>>(emptyMap()) }
+    val isLoading = remember { mutableStateOf(false) }
 
     LaunchedEffect(selectedDate, fieldType) {
+        isLoading.value = true
+        kotlinx.coroutines.delay(1000)
         FetchScheduleData(selectedDate, fieldType) { data ->
+            isLoading.value = false
             Log.d("FetchScheduleData", "Data: $data")
             val formattedData = mutableMapOf<String, MutableMap<String, String>>()
             data.forEach { time ->
@@ -241,50 +253,61 @@ fun TableScreen(
             IconButton(onClick = { onDateChange("previous") }) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Previous")
             }
-            TextButton(onClick = { showDatePicker.value = true }) { // Memunculkan DatePicker
-                Text(text = selectedDate, style = MaterialTheme.typography.h6)
+            TextButton(onClick = { showDatePicker.value = true }) {
+                Text(text = "Jadwal: $selectedDate", style = MaterialTheme.typography.h6)
             }
             IconButton(onClick = { onDateChange("next") }) {
                 Icon(Icons.Default.ArrowForward, contentDescription = "Next")
             }
         }
 
-        // Header kolom
-        Row(
-            Modifier
-                .background(Color.Gray)
-                .fillMaxWidth()
-        ) {
-            listOf(1, 2, 3).forEach { i ->
-                TableCellParent(text = "$fieldType $i", weight = columnWeight)
+        if (isLoading.value) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = colorResource(id = R.color.main_blue))
             }
-        }
+        } else {
+            // Header kolom
+            Row(
+                Modifier
+                    .background(Color.Gray)
+                    .fillMaxWidth()
+            ) {
+                listOf(1, 2, 3).forEach { i ->
+                    TableCellParent(text = "$fieldType $i", weight = columnWeight)
+                }
+            }
 
-        // Data
-        LazyColumn(Modifier.fillMaxSize()) {
-            items(timeSlots) { time ->
-                Row(Modifier.fillMaxWidth()) {
-                    listOf(1, 2, 3).forEach { i ->
-                        val lapanganName = "lapangan $fieldType $i"
-                        val reservation = reservations.value[time]?.get(lapanganName)
-                        val isReserved = reservation != null && reservation != ""
-                        TableCell(
-                            time = time,
-                            text = reservation ?: "",
-                            weight = columnWeight,
-                            backgroundColor = if (isReserved) Color.Red.copy(alpha = 0.1f) else Color.White
-                        )
+            // Data
+            LazyColumn(Modifier.fillMaxSize()) {
+                items(timeSlots) { time ->
+                    Row(Modifier.fillMaxWidth()) {
+                        listOf(1, 2, 3).forEach { i ->
+                            val lapanganName = "lapangan $fieldType $i"
+                            val reservation = reservations.value[time]?.get(lapanganName)
+                            val isReserved = reservation != null && reservation != ""
+                            TableCell(
+                                time = time,
+                                text = reservation ?: "",
+                                weight = columnWeight,
+                                backgroundColor = if (isReserved) Color.Red.copy(alpha = 0.1f) else Color.White
+                            )
+                        }
                     }
                 }
             }
         }
 
         if (showDatePicker.value) {
-            ShowDatePicker(calendar) { year, month, dayOfMonth ->
+            ShowDatePicker(calendar, { year, month, dayOfMonth ->
                 calendar.set(year, month, dayOfMonth)
-                onDateChange("select")
                 showDatePicker.value = false
-            }
+                onDateChange("select")
+            }, showDatePicker)
         }
     }
 }
@@ -303,7 +326,7 @@ fun RowScope.TableCellParent(
             .background(backgroundColor)
             .padding(8.dp)
     ) {
-        Text(text = text, style = MaterialTheme.typography.body2)
+        Text(text = text, style = MaterialTheme.typography.body2, textAlign = TextAlign.Center)
     }
 }
 
@@ -332,19 +355,32 @@ fun RowScope.TableCell(
 @Composable
 fun ShowDatePicker(
     calendar: Calendar,
-    onDateSelected: (Int, Int, Int) -> Unit
+    onDateSelected: (Int, Int, Int) -> Unit,
+    showDatePicker: MutableState<Boolean>
 ) {
     val context = LocalContext.current
-    DatePickerDialog(
-        context,
-        { _, year, month, dayOfMonth ->
-            onDateSelected(year, month, dayOfMonth)
-        },
-        calendar.get(Calendar.YEAR),
-        calendar.get(Calendar.MONTH),
-        calendar.get(Calendar.DAY_OF_MONTH)
-    ).show()
+
+    if (showDatePicker.value) {
+        val datePickerDialog = DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                onDateSelected(year, month, dayOfMonth)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+
+        datePickerDialog.setOnCancelListener {
+            showDatePicker.value = false
+        }
+
+        LaunchedEffect(datePickerDialog) {
+            datePickerDialog.show()
+        }
+    }
 }
+
 
 
 @Preview(showBackground = true)

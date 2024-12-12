@@ -58,21 +58,22 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.database.FirebaseDatabase
 
 private lateinit var auth: FirebaseAuth
 private lateinit var googleSignInClient: GoogleSignInClient
 
 
-fun SignIn(email: String, pass: String, nContext: Context, navCtrl: NavController){
+fun LogIn(email: String, pass: String, nContext: Context, navCtrl: NavController){
     auth = Firebase.auth
     auth.signInWithEmailAndPassword(email, pass)
         .addOnCompleteListener{ task ->
             if(task.isSuccessful){
-                val user = auth.currentUser?.email
                 Toast.makeText(
                     nContext,
-                    user.toString(),
+                    "Login berhasil.",
                     Toast.LENGTH_SHORT
                 ).show()
                 navCtrl.navigate("home")
@@ -80,33 +81,10 @@ fun SignIn(email: String, pass: String, nContext: Context, navCtrl: NavControlle
             else{
                 Toast.makeText(
                     nContext,
-                    "Autentikasi gagal.",
+                    "Login gagal.",
                     Toast.LENGTH_SHORT
                 ).show()
             }
-        }
-}
-@Composable
-fun GoogleSignInAuth(account: GoogleSignInAccount, navCtrl: NavController, activity: Activity){
-        if (account != null) {
-            val idToken = account.idToken
-            if (idToken != null) {
-                val credential = GoogleAuthProvider.getCredential(idToken, null)
-                auth.signInWithCredential(credential)
-                    .addOnCompleteListener(activity) { tasks ->
-                        if (tasks.isSuccessful) {
-                            Log.d("GoogleSignIn", "Login dengan google: berhasil!")
-                            navCtrl.navigate("home")
-                        } else {
-                            Log.w("GoogleSignIn", "Login dengan google: gagal!", tasks.exception)
-                            Toast.makeText(activity, "Autentikasi Gagal.", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-            } else {
-                Toast.makeText(activity, "Google Sign-In gagal.", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            Toast.makeText(activity, "Sign-In gagal.", Toast.LENGTH_SHORT).show()
         }
 }
 
@@ -115,28 +93,57 @@ fun LoginLayout(
     modifier: Modifier = Modifier,
     navCtrl: NavController
 ) {
-    fun GoogleSignInAuth(account: GoogleSignInAccount, navCtrl: NavController, activity: Activity){
-        if (account != null) {
-            val idToken = account.idToken
-            if (idToken != null) {
-                val credential = GoogleAuthProvider.getCredential(idToken, null)
-                auth.signInWithCredential(credential)
-                    .addOnCompleteListener(activity) { tasks ->
-                        if (tasks.isSuccessful) {
-                            Log.d("GoogleSignIn", "Login dengan google: berhasil!")
-                            navCtrl.navigate("home")
-                        } else {
-                            Log.w("GoogleSignIn", "Login dengan google: gagal!", tasks.exception)
-                            Toast.makeText(activity, "Autentikasi Gagal.", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-            } else {
-                Toast.makeText(activity, "Google Sign-In gagal.", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            Toast.makeText(activity, "Sign-In gagal.", Toast.LENGTH_SHORT).show()
+    fun GoogleLogInAuth(account: GoogleSignInAccount?, navCtrl: NavController, activity: Activity) {
+        if (account == null) {
+            Toast.makeText(activity, "Google Log-In gagal.", Toast.LENGTH_SHORT).show()
+            return
         }
+
+        val idToken = account.idToken
+        if (idToken == null) {
+            Toast.makeText(activity, "Google Log-In gagal.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener(activity) { task ->
+                if (task.isSuccessful) {
+                    val userId = auth.currentUser?.uid
+                    if (userId != null) {
+                        // Cek keberadaan data pengguna di Realtime Database
+                        val databaseRef = FirebaseDatabase.getInstance().getReference("users").child(userId)
+                        databaseRef.get().addOnSuccessListener { snapshot ->
+                            if (snapshot.exists()) {
+                                // Data ditemukan, lanjutkan login
+                                Toast.makeText(activity, "Google Log-In berhasil", Toast.LENGTH_SHORT).show()
+                                navCtrl.navigate("home")
+                            } else {
+                                // Data tidak ditemukan, batalkan login dan hapus akun dari Firebase Authentication
+                                auth.currentUser?.delete()?.addOnCompleteListener { deleteTask ->
+                                    if (deleteTask.isSuccessful) {
+                                        auth.signOut()
+                                        googleSignInClient.signOut()
+                                        Toast.makeText(activity, "Akun belum terdaftar. Silakan daftar terlebih dahulu.", Toast.LENGTH_SHORT).show()
+                                        navCtrl.navigate("login")
+                                    } else {
+                                        Toast.makeText(activity, "Gagal menghapus akun dari autentikasi.", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                        }.addOnFailureListener {
+                            // Gagal membaca database
+                            Toast.makeText(activity, "Terjadi kesalahan saat memeriksa data pengguna.", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Toast.makeText(activity, "Autentikasi gagal. Silakan coba lagi.", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(activity, "Autentikasi gagal.", Toast.LENGTH_SHORT).show()
+                }
+            }
     }
+
 
     var email by remember { mutableStateOf("")}
     var password by remember { mutableStateOf("")}
@@ -146,7 +153,7 @@ fun LoginLayout(
         auth = Firebase.auth
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(R.string.default_web_client_id.toString())
+            .requestIdToken(nContext.getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
 
@@ -157,7 +164,14 @@ fun LoginLayout(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        GoogleSignInAuth(account = task.result,navCtrl = navCtrl, activity = nContext as Activity)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            GoogleLogInAuth(account = account, navCtrl = navCtrl, activity = nContext as Activity)
+        } catch (e: ApiException) {
+            Log.e("GoogleSignIn", "Google Sign-In gagal: ${e.message}", e)
+            Toast.makeText(nContext, "Google Sign-In gagal.", Toast.LENGTH_SHORT).show()
+        }
+
     }
     Box (
         Modifier
@@ -207,6 +221,7 @@ fun LoginLayout(
                 },
                 label = { Text(text = "Email")},
                 placeholder = { Text(text = "Masukkan Email Anda")},
+                singleLine = true,
                 shape = RoundedCornerShape(30.dp),
                 colors = TextFieldDefaults.colors(
                     unfocusedIndicatorColor = Color.Transparent,
@@ -226,6 +241,7 @@ fun LoginLayout(
                 },
                 label = { Text(text = "Password")},
                 placeholder = { Text(text = "Masukkan Password Anda")},
+                singleLine = true,
                 shape = RoundedCornerShape(30.dp),
                 colors = TextFieldDefaults.colors(
                     unfocusedIndicatorColor = Color.Transparent,
@@ -237,7 +253,7 @@ fun LoginLayout(
             Button(
                 onClick = {
                     if (email.isNotEmpty() && password.isNotEmpty()){
-                        SignIn(email, password, nContext, navCtrl)
+                        LogIn(email, password, nContext, navCtrl)
                     }
                     else{
                         Toast.makeText(

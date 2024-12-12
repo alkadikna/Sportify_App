@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +27,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
+import androidx.compose.material.Surface
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Scaffold
@@ -46,13 +48,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
@@ -66,15 +71,38 @@ import com.example.sportify.ui.theme.SportifyTheme
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.delay
 
 private lateinit var auth: FirebaseAuth;
 private lateinit var googleSignInClient: GoogleSignInClient
 private lateinit var database: FirebaseDatabase;
 
 @Composable
-fun HomeLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
+fun HomeLayout(navCtrl: NavController, auth: FirebaseAuth) {
+    val currentUser = auth.currentUser
+    var userName by remember { mutableStateOf("-") }
+    fun fetchUserData(uid: String) {
+        val database = FirebaseDatabase.getInstance("https://sportify-3eb54-default-rtdb.asia-southeast1.firebasedatabase.app").getReference("users").child(uid)
+        database.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                userName = snapshot.child("username").getValue(String::class.java) ?: "-"
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("HomeLayout", "Failed to fetch username data: ${error.message}")
+            }
+        })
+    }
+
+    LaunchedEffect(currentUser) {
+        currentUser?.uid?.let { fetchUserData(it) }
+    }
+
     Scaffold(
-        topBar = { FloatingSearchBarLayout() },
+        topBar = { FloatingSearchBarLayout(userName) },
         bottomBar = {
             BottomNavigationBar(
                 navController = navCtrl,
@@ -113,21 +141,30 @@ fun HomeLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
 }
 
 @Composable
-fun FloatingSearchBarLayout() {
+fun FloatingSearchBarLayout(userName : String) {
     Box(modifier = Modifier.fillMaxWidth()) {
         TopSection()
-        SearchBar(
+        WelcomeBox(userName = userName,
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .offset(y = 25.dp)
+                .align(Alignment.Center)
+                .offset(y = 60.dp)
         )
     }
 }
 
 
 @Composable
-fun SearchBar(modifier: Modifier = Modifier) {
-    var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
+fun WelcomeBox(userName: String, modifier: Modifier = Modifier) {
+    var displayedText by remember { mutableStateOf("") }
+    val fullText = "Ayo kita berolahraga, $userName!"
+
+    LaunchedEffect(fullText) {
+        for (i in fullText.indices) {
+            displayedText = fullText.substring(0, i + 1)
+            delay(100)
+        }
+    }
+
     Box(
         modifier = modifier
             .fillMaxWidth(0.9f)
@@ -139,24 +176,15 @@ fun SearchBar(modifier: Modifier = Modifier) {
                 spotColor = Color.Black.copy(0.2f)
             )
             .background(Color.White, shape = RoundedCornerShape(24.dp))
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_search),
-                contentDescription = "Search Icon",
-                tint = Color.Gray
+        Text(
+            text = displayedText,
+            style = androidx.compose.material.MaterialTheme.typography.body1.copy(
+                color = Color.Gray
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            BasicTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-        }
+        )
     }
 }
 
@@ -178,8 +206,7 @@ fun FieldTypeSection(navCtrl: NavController) {
     ) {
         Text(
             text = "Pilih Jenis Lapangan",
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.bodyLarge
         )
 
         LazyRow(
@@ -187,42 +214,67 @@ fun FieldTypeSection(navCtrl: NavController) {
             contentPadding = PaddingValues(horizontal = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(25.dp)
         ) {
-            items(listOf("Badminton", "Futsal", "Tenis")) { type ->
+            val fieldTypes = listOf(
+                "Badminton" to R.drawable.bultang,
+                "Futsal" to R.drawable.futsal,
+                "Tennis" to R.drawable.tennis,
+                "Basket" to R.drawable.basket,
+                "Soon" to null // placeholder
+            )
+
+            items(fieldTypes) { (type, imageRes) ->
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(vertical = 10.dp)
                 ) {
-                    Surface(
-                        shape = CircleShape,
-                        modifier = Modifier.size(64.dp),
-                        color = Color.Gray // Placeholder for image background color
-                    ) {
-                        // Replace this with an Image composable for actual images
-                        Button(
-                            onClick = {
-                                navCtrl.navigate("result/$type/0/0/${selectedDate.value}")
-                            }
-                        ){
+                    if (imageRes != null) {
+                       Button(
+                           onClick = {
+                               navCtrl.navigate("result/$type/0/0/${selectedDate.value}")
+                           },
+                           modifier = Modifier
+                               .size(64.dp)
+                               .clip(CircleShape)
+                               .border(1.dp, Color.Gray, CircleShape)
+                       ) {
+                           Image(
+                              painter = painterResource(id = imageRes),
+                              contentDescription = "$type Image",
+                              modifier = Modifier
+                                  .size(64.dp)
+                                  .clip(CircleShape),
+                              contentScale = ContentScale.Crop
+                           )
+                       }
+                    } else {
+                        // placeholder
+                        Surface(
+                            shape = CircleShape,
+                            modifier = Modifier.size(64.dp),
+                            color = Color.Gray
+                        ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
-                                    text = type.take(1),
+                                    text = "S",
                                     fontSize = 20.sp,
                                     color = Color.White
-                                ) // Placeholder text (e.g., "B" for "Badminton")
+                                )
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = type,
-                                fontSize = 12.sp,
-                                color = Color.Black
-                            )
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = type,
+                        fontSize = 12.sp,
+                        color = Color.Black
+                    )
                 }
             }
         }
     }
 }
+
 
 
 @Composable
@@ -233,8 +285,7 @@ fun AvailableFieldsSection() {
     ) {
         Text(
             text = "Lapangan yang tersedia",
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.bodyLarge
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -320,7 +371,8 @@ fun UserBookingSection() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 4.dp),
-                color = Color.LightGray
+                color = Color.White,
+                elevation = 4.dp
             ) {
                 Row(
                     modifier = Modifier.padding(8.dp),
@@ -340,7 +392,7 @@ fun UserBookingSection() {
                     Spacer(modifier = Modifier.weight(1f))
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowRight, // Replace with your arrow icon resource
-                        contentDescription = "Arrow Icon"
+                        contentDescription = "Arrow Icon",
                     )
                 }
             }
@@ -353,6 +405,6 @@ fun UserBookingSection() {
 @Composable
 fun HomeLayoutPreview(){
     SportifyTheme {
-        HomeLayout(modifier = Modifier, navCtrl = rememberNavController())
+        HomeLayout(navCtrl = rememberNavController(), auth)
     }
 }

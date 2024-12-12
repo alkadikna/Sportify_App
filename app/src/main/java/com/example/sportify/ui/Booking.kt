@@ -13,15 +13,19 @@ import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.sportify.R
 import com.example.sportify.layout_component.BottomNavigationBar
 import com.example.sportify.layout_component.BottomSheet
 import com.example.sportify.layout_component.FloatingCartButton
@@ -48,6 +52,7 @@ fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
     }
 
     val context = LocalContext.current
+    var isDropdownOpen by remember { mutableStateOf(false) } // Control Modal visibility
 
     // Function to update date
     fun updateDate(action: String) {
@@ -66,13 +71,15 @@ fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
     }
 
     Scaffold(
+        topBar = { TopSectionWithImage() },
         bottomBar = {
-            BottomNavigationBar(
-                navController = navCtrl,
-                index = 2
-            )
+            if (!isDropdownOpen) {
+                BottomNavigationBar(
+                    navController = navCtrl,
+                    index = 2
+                )
+            }
         },
-//        floatingActionButton = { FloatingCartButton() },
         content = { paddingValues ->
             Column(
                 modifier = Modifier
@@ -80,7 +87,6 @@ fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
                     .padding(paddingValues)
             ) {
                 Spacer(modifier = Modifier.height(15.dp))
-                TopSectionWithImage()
                 Form(
                     modifier = Modifier,
                     navCtrl = navCtrl,
@@ -100,139 +106,134 @@ fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
                         } else {
                             updateDate(action) // Previous or Next
                         }
-                    }
+                    },
+                    isDropdownOpen = isDropdownOpen,
+                    setIsDropdownOpen = { isDropdownOpen = it }
                 )
-//                FloatingCartButton()
             }
         }
     )
 }
 
-@SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Form(
     modifier: Modifier = Modifier,
     navCtrl: NavController,
     selectedDate: MutableState<String>,
-    onDateChange: (String) -> Unit
+    onDateChange: (String) -> Unit,
+    isDropdownOpen: Boolean,
+    setIsDropdownOpen: (Boolean) -> Unit
 ) {
-    var selectedActivity by remember { mutableStateOf("Aktivitas") }
     var selectedSport by remember { mutableStateOf("Cabang Olahraga") }
     var startTime by remember { mutableStateOf("") }
     var endTime by remember { mutableStateOf("") }
-    var nContext = LocalContext.current
-    var isValid by remember { mutableStateOf(false)}
+    val nContext = LocalContext.current
 
-    val scaffoldState = rememberBottomSheetScaffoldState()
-    val scope = rememberCoroutineScope()
-
-    BottomSheetScaffold(
-        scaffoldState = scaffoldState,
-        sheetPeekHeight = 0.dp,
-        sheetContent = {
-            BottomSheet { sport ->
-                selectedSport = sport
-//                scope.launch { scaffoldState.bottomSheetState.hide() }
-            }
-        }
-    ) {
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            elevation = 8.dp,
-
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
-                .padding(top = 0.dp)
-                .padding(horizontal = 20.dp)
-//                .offset(y = (-50).dp)
+    if (isDropdownOpen) {
+        ModalBottomSheet(
+            onDismissRequest = { setIsDropdownOpen(false) }, // Close the dropdown when dismissed
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         ) {
-            Column(
+            CustomDropdownMenuContent(
+                items = listOf("Badminton", "Basket", "Tennis", "Futsal"),
+                onSelect = { sport ->
+                    selectedSport = sport
+                    setIsDropdownOpen(false)
+                },
+                selectedItem = selectedSport
+            )
+        }
+    }
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        elevation = 8.dp,
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp)
+                .background(Color.White)
+        ) {
+            DropdownItem(
+                label = selectedSport,
+                onClick = { setIsDropdownOpen(true) } // Open the dropdown
+            )
+            DropdownItem(
+                label = selectedDate.value,
+                onClick = { onDateChange("select") }
+            )
+            TextField(
+                value = startTime,
+                onValueChange = { startTime = it },
                 Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp)
-                    .background(Color.White)
-            ) {
-                DropdownItem(
-                    label = selectedSport,
-                    onClick = {
-                        scope.launch { scaffoldState.bottomSheetState.expand() }
-                    }
+                    .padding(12.dp)
+                    .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                    .height(60.dp)
+                    .fillMaxWidth(),
+                label = { Text("Waktu Mulai") },
+                placeholder = { Text("Contoh: 10") },
+                colors = TextFieldDefaults.colors(
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedContainerColor = Color.White
                 )
-                DropdownItem(
-                    label = selectedDate.value,
-                    onClick = { onDateChange("select") }
+            )
+            TextField(
+                value = endTime,
+                onValueChange = { endTime = it },
+                Modifier
+                    .padding(12.dp)
+                    .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                    .height(60.dp)
+                    .fillMaxWidth(),
+                label = { Text("Waktu Selesai") },
+                placeholder = { Text("Contoh: 12") },
+                colors = TextFieldDefaults.colors(
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedContainerColor = Color.White
                 )
-                TextField(
-                    value = startTime,
-                    onValueChange = { startTime = it },
-                    Modifier
-                        .padding(12.dp)
-                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
-                        .height(60.dp)
-                        .fillMaxWidth(),
-                    label = { Text("Waktu Mulai") },
-                    placeholder = { Text("Contoh: 10") },
-                    colors = TextFieldDefaults.colors(
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedContainerColor = Color.White
-                    )
-                )
-                TextField(
-                    value = endTime,
-                    onValueChange = { endTime = it },
-                    Modifier
-                        .padding(12.dp)
-                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
-                        .height(60.dp)
-                        .fillMaxWidth(),
-                    label = { Text("Waktu Selesai") },
-                    placeholder = { Text("Contoh: 12") },
-                    colors = TextFieldDefaults.colors(
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedContainerColor = Color.White
-                    )
-                )
-                Button(
-                    onClick = {
-                        isValid = startTime.toIntOrNull() != null && endTime.toIntOrNull() != null
-                        if(startTime.isNotEmpty() && endTime.isNotEmpty()){
-                            if(isValid){
-                                navCtrl.navigate("result/$selectedSport/$startTime/$endTime/${selectedDate.value}")
-                            }
-                            else{
-                                Toast.makeText(
-                                    nContext,
-                                    "Waktu harus berupa angka!",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
-                        }
-                        else{
+            )
+            Button(
+                onClick = {
+                    if (startTime.isNotEmpty() && endTime.isNotEmpty()) {
+                        val isValid = startTime.toIntOrNull() != null && endTime.toIntOrNull() != null
+                        if (isValid) {
+                            navCtrl.navigate("result/$selectedSport/$startTime/$endTime/${selectedDate.value}")
+                        } else {
                             Toast.makeText(
                                 nContext,
-                                "Semua data harus diisi!",
+                                "Waktu harus berupa angka!",
                                 Toast.LENGTH_LONG
                             ).show()
                         }
-                    },
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 80.dp)
-                        .padding(top = 8.dp)
-                        .padding(bottom = 20.dp),
-                    colors = ButtonDefaults.buttonColors(Color(0xFF54BDFE)),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text("Cari", color = Color.Black, fontSize = 15.sp)
-                }
+                    } else {
+                        Toast.makeText(
+                            nContext,
+                            "Semua data harus diisi!",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                },
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 80.dp)
+                    .padding(top = 8.dp)
+                    .padding(bottom = 20.dp),
+                colors = ButtonDefaults.buttonColors(Color(0xFF54BDFE)),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text("Cari", color = Color.Black, fontSize = 15.sp)
             }
         }
     }
 }
+
 
 @Composable
 fun DropdownItem(label: String, onClick: () -> Unit) {
@@ -255,3 +256,63 @@ fun DropdownItem(label: String, onClick: () -> Unit) {
         )
     }
 }
+
+@Composable
+fun CustomDropdownMenuContent(
+    items: List<String>,
+    onSelect: (String) -> Unit,
+    selectedItem: String
+) {
+    val icons = mapOf(
+        "Badminton" to R.drawable.v_badminton,
+        "Basket" to R.drawable.v_basket,
+        "Tennis" to R.drawable.v_tennis,
+        "Futsal" to R.drawable.v_soccer
+    )
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        items.forEach { item ->
+            val isSelected = item == selectedItem
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { onSelect(item) }
+                    .padding(vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Icon(
+                    painter = painterResource(id = icons[item] ?: R.drawable.v_basket), // default icon if none exists
+                    contentDescription = null,
+                    Modifier.size(24.dp)
+                )
+                Spacer(Modifier.width(16.dp))
+                Text(text = item, fontSize = 16.sp, modifier = Modifier.weight(1f))
+
+                if (isSelected) {
+                    Icon(
+                        imageVector = Icons.Filled.CheckCircle,
+                        contentDescription = null,
+                        tint = Color(0xFF4CAF50),
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Filled.CheckCircleOutline,
+                        contentDescription = null,
+                        tint = Color.Gray,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+
+
+

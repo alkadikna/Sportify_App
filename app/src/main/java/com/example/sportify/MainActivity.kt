@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = startDestination) {
                     composable("login") { LoginLayout(navCtrl = navController) }
                     composable("register") { RegisterLayout(navCtrl = navController) }
-                    composable("home") { HomeLayout(modifier = Modifier, navCtrl = navController) }
+                    composable("home") { HomeLayout(navCtrl = navController, auth = auth) }
                     composable("schedule") { ScheduleLayout(navCtrl = navController) }
                     composable("booking") { BookingLayout(navCtrl = navController)}
                     composable("profile") { ProfileLayout(navController = navController, auth = auth) }
@@ -77,9 +77,8 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(Unit) {
 //                    InitDb()
                     deleteOutdatedSchedule()
-//                    deleteOutdatedTimes()
+//                    deleteOutdatedTimes()s
                 }
-
             }
         }
     }

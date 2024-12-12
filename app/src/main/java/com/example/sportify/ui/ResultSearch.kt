@@ -3,10 +3,15 @@ package com.example.sportify.ui
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -18,6 +23,7 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
@@ -43,7 +49,9 @@ import com.example.sportify.Model.Time
 import com.example.sportify.R
 import com.example.sportify.Repository.FetchScheduleData
 import com.example.sportify.Repository.getScheduleByTime
+import com.example.sportify.layout_component.BottomNavigationBar
 import com.example.sportify.layout_component.FloatingCartButton
+import com.example.sportify.layout_component.TopSection
 import com.google.firebase.database.FirebaseDatabase
 
 
@@ -70,28 +78,49 @@ fun TestingReadDB(navCtrl: NavController, fieldType: String, start: Int, end: In
         }
     }
 
-    LazyColumn {
-        items(timeList){ time ->
-            // List lapangan untuk waktu tertentu
-            time.fieldList.filter { it.name.contains("", ignoreCase = true) }
-                .forEach { field ->
-                    if (field.isAvailable) {
-//                        FieldItem(field = field, selectedDate = selectedDate, startTime = time.startTime, endTime = time.endTime
-//                        , addCart = { cart ->
-//                                cartList.add(cart)
-//                            }
-//                        )
-                        FieldItem(field = field, selectedDate = selectedDate, startTime = time.startTime, endTime = time.endTime,
-                            addCart = { item ->
-                                cartList.add(item)
+    Scaffold(
+        topBar = { TopSection() },
+        bottomBar = {},
+        content = { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
+                    items(timeList) { time ->
+                        time.fieldList.filter { it.name.contains("", ignoreCase = true) }
+                            .forEach { field ->
+                                if (field.isAvailable) {
+                                    FieldItem(
+                                        field = field,
+                                        selectedDate = selectedDate,
+                                        startTime = time.startTime,
+                                        endTime = time.endTime,
+                                        addCart = { item ->
+                                            cartList.add(item)
+                                        }
+                                    )
+                                }
                             }
-                        )
                     }
                 }
+
+                FloatingCartButton(
+                    onClick = { showDialog = true },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                )
+                ShowCartDialog(
+                    showDialog = showDialog,
+                    onDismissDialog = { showDialog = false },
+                    cart = cartList,
+                    navCtrl = navCtrl
+                )
+            }
         }
-    }
-    FloatingCartButton(onClick = {showDialog = true})
-    ShowCartDialog(showDialog = showDialog, onDismissDialog = { showDialog = false }, cart = cartList, navCtrl = navCtrl)
+    )
 }
 
 @SuppressLint("DefaultLocale")
@@ -110,7 +139,7 @@ fun FieldItem(field: Field, selectedDate: String, startTime: Int, endTime: Int, 
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 30.dp)
-            .padding(vertical = 20.dp)
+            .padding(vertical = 10.dp)
     ) {
         Row(
             modifier = Modifier
