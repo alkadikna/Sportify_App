@@ -86,6 +86,7 @@ import java.util.Locale
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -347,7 +348,7 @@ fun AvailableFieldsSection() {
             Spacer(modifier = Modifier.weight(1f))
             IconButton(
                 onClick = {
-                    scope.launch {
+                    scope.launch(Dispatchers.IO) {
                         isLoading.value = true
                         kotlinx.coroutines.delay(1000)
                         getScheduleByTime("", startTarget, endTarget, today.toString()) { time ->
