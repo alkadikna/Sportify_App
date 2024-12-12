@@ -49,9 +49,9 @@ import com.example.sportify.R
 import com.example.sportify.Repository.saveOrder
 import com.example.sportify.Repository.updateField
 import com.example.sportify.layout_component.TopSection
-import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflect.TypeToken
 import com.google.firebase.database.FirebaseDatabase
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 private lateinit var database: FirebaseDatabase
 
@@ -66,7 +66,7 @@ fun OrderLayout(navCtrl: NavController, cartListJson: String, modifier: Modifier
 
     Scaffold(
         topBar = { TopSection() },
-        bottomBar = { BottomPaymentSection(navCtrl, cartList.sumOf { it.price }, cartList) },
+        bottomBar = { BottomPaymentSection(navCtrl, cartList.sumOf { it.price }, cartList)},
     ) { paddingValues ->
         Column(
             modifier = Modifier
