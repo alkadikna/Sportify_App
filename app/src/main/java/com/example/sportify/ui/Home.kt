@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
 import androidx.compose.material.Surface
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.CrisisAlert
@@ -50,6 +52,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
@@ -64,12 +67,15 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
+import com.example.sportify.Model.Field
 import com.example.sportify.Model.Time
 import com.example.sportify.R
 import com.example.sportify.Repository.FetchScheduleData
 import com.example.sportify.Repository.getOrder
+import com.example.sportify.Repository.getScheduleByTime
 import com.example.sportify.layout_component.BottomNavigationBar
 import com.example.sportify.layout_component.TopSection
 import com.example.sportify.ui.theme.SportifyTheme
@@ -293,14 +299,34 @@ fun FieldTypeSection(navCtrl: NavController) {
 
 
 
+@SuppressLint("Range")
 @Composable
 fun AvailableFieldsSection() {
+
+    val timeList = remember { mutableStateListOf<Time>() }
+    val fieldType = listOf("Badminton", "Futsal", "Tenis", "Basket")
+    val calendar = Calendar.getInstance()
+    val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
+    val startTarget = currentHour + 1
+    val endTarget = currentHour + 2
+    val today = SimpleDateFormat("dd-MM-yyyy", Locale("id","ID")).format(calendar.time)
+
+    LaunchedEffect(Unit) {
+        getScheduleByTime("", startTarget, endTarget, today.toString()){ time ->
+            timeList.addAll(time)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
     ) {
-        Row{
-            Icon(
+        Row (
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ){
+          Icon(
                 imageVector = Icons.Default.Bolt,
                 contentDescription = "Tersedia Icon",
                 tint = Color.Black ,
@@ -308,10 +334,22 @@ fun AvailableFieldsSection() {
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Lapangan yang tersedia",
+                text = "Lapangan yang tersedia pukul " + formatHour(startTarget),
                 style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
                 fontWeight = FontWeight.SemiBold
             )
+            IconButton(
+                onClick = {
+                    getScheduleByTime("", startTarget, endTarget, today.toString()){ time ->
+                        timeList.addAll(time)
+                    }
+                },
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh, contentDescription = null,
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -321,9 +359,7 @@ fun AvailableFieldsSection() {
             contentPadding = PaddingValues(horizontal = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            val fields = listOf("Badminton A", "Tennis A", "Lapangan Basket")
-
-            items(fields.size) { index ->
+            items(fieldType.size) { index ->
                 Card(
                     modifier = Modifier
                         .width(150.dp)
@@ -346,17 +382,54 @@ fun AvailableFieldsSection() {
                             contentScale = ContentScale.Crop
                         )
                         Text(
-                            text = fields[index],
+                            text = fieldType[index],
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp,
                             modifier = Modifier.padding(vertical = 8.dp, horizontal = 8.dp)
                         )
-                        Text(
-                            text = "16.00-18.00",
-                            fontSize = 15.sp,
-                            color = Color.Gray,
-                            modifier = Modifier.padding(5.dp)
-                        )
+                        
+                        if(timeList.isEmpty()){
+                            Text(
+                                text = "Tidak ada lapangan yang tersedia :(",
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(horizontal = 5.dp),
+                                textAlign = TextAlign.Center
+
+                            )
+                        }
+                        LazyColumn {
+                            items(timeList){ time ->
+                                time.fieldList.forEach{ field ->
+                                    if(field.name.contains(fieldType[index], ignoreCase = true)){
+                                        Text(
+                                            text = field.name,
+                                            fontSize = 12.sp,
+                                            modifier = Modifier
+                                                .padding(horizontal = 5.dp)
+                                        )
+                                    }
+                                    else{
+                                        Text(
+                                            text = "Tidak ada lapangan yang tersedia",
+                                            fontSize = 12.sp,
+                                            modifier = Modifier.padding(horizontal = 5.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+//                        Text(
+//                            text = fieldType[index],
+//                            fontWeight = FontWeight.Bold,
+//                            fontSize = 15.sp,
+//                            modifier = Modifier.padding(horizontal = 5.dp)
+//                        )
+//                        Text(
+//                            text = "16.00-18.00",
+//                            fontSize = 15.sp,
+//                            color = Color.Gray,
+//                            modifier = Modifier.padding(5.dp)
+//                        )
                     }
                 }
             }
