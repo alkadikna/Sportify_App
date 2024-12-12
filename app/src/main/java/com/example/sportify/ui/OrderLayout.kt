@@ -1,6 +1,5 @@
 package com.example.sportify.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,23 +10,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonElevation
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,6 +34,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -62,7 +62,11 @@ fun OrderLayout(navCtrl: NavController, cartListJson: String, modifier: Modifier
 
     val gson = Gson()
     val listType = object : TypeToken<List<Cart>>() {}.type
-    val cartList: List<Cart> = gson.fromJson(cartListJson, listType)
+    val cartList = remember {
+        mutableStateListOf<Cart>().apply {
+            addAll(gson.fromJson(cartListJson, listType))
+        }
+    }
 
     Scaffold(
         topBar = { TopSection() },
@@ -77,7 +81,7 @@ fun OrderLayout(navCtrl: NavController, cartListJson: String, modifier: Modifier
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .weight(1f, fill = false),
+                    .weight(0.7f, fill = false),
                 elevation = 4.dp,
             ) {
                 Column(
@@ -102,8 +106,7 @@ fun OrderLayout(navCtrl: NavController, cartListJson: String, modifier: Modifier
                     ) {
                         BookingList(
                             cartList = cartList,
-                            onEdit = { /* TODO: Handle Edit */ },
-                            onRemove = { /* TODO: Handle Remove */ }
+                            onRemove = { item -> cartList.remove(item) }
                         )
                     }
 
@@ -119,6 +122,45 @@ fun OrderLayout(navCtrl: NavController, cartListJson: String, modifier: Modifier
                     )
                 }
             }
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                elevation = 4.dp
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.receipt_sharp),
+                        contentDescription = "",
+                        modifier = Modifier.size(35.dp),
+                        tint = Color.Black
+                    )
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Text(
+                        text = "Tambahkan Promo",
+                        style = TextStyle(
+                            fontSize = 18.sp,
+                            color = Color.Black,
+                            fontFamily = FontFamily(Font(R.font.inria_serif_bold)),
+                        ),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Icon(
+                        painter = painterResource(id = R.drawable.weui_arrow_filled),
+                        contentDescription = null,
+                        tint = Color.Black,
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
+            }
+
 
             Card(
                 modifier = Modifier
@@ -222,8 +264,8 @@ fun OrderLayout(navCtrl: NavController, cartListJson: String, modifier: Modifier
 }
 
 @Composable
-fun BookingList(cartList: List<Cart>, onEdit: (Cart) -> Unit, onRemove: (Cart) -> Unit) {
-    LazyColumn{
+fun BookingList(cartList: List<Cart>, onRemove: (Cart) -> Unit) {
+    LazyColumn {
         items(cartList) { item ->
             Card(
                 modifier = Modifier
@@ -231,7 +273,7 @@ fun BookingList(cartList: List<Cart>, onEdit: (Cart) -> Unit, onRemove: (Cart) -
                     .padding(vertical = 8.dp),
                 elevation = 0.dp
             ) {
-                Column{
+                Column {
                     Text(
                         text = item.name,
                         style = TextStyle(
@@ -256,7 +298,8 @@ fun BookingList(cartList: List<Cart>, onEdit: (Cart) -> Unit, onRemove: (Cart) -
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    Row(horizontalArrangement = Arrangement.SpaceBetween,
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
@@ -264,7 +307,7 @@ fun BookingList(cartList: List<Cart>, onEdit: (Cart) -> Unit, onRemove: (Cart) -
                             style = TextStyle(
                                 fontSize = 15.sp,
                                 color = Color.Black,
-                                //fontFamily = FontFamily(Font(R.font.inria_serif_bold)),
+                                fontFamily = FontFamily(Font(R.font.inria_serif_bold)),
                             ),
                             modifier = Modifier
                                 .graphicsLayer { this.alpha = 0.7f }
@@ -275,7 +318,7 @@ fun BookingList(cartList: List<Cart>, onEdit: (Cart) -> Unit, onRemove: (Cart) -
                             style = TextStyle(
                                 fontSize = 15.sp,
                                 color = Color.Black,
-                                //fontFamily = FontFamily(Font(R.font.inria_serif_bold)),
+                                fontFamily = FontFamily(Font(R.font.inria_serif_bold)),
                             ),
                             modifier = Modifier
                                 .graphicsLayer { this.alpha = 0.7f }
@@ -285,47 +328,27 @@ fun BookingList(cartList: List<Cart>, onEdit: (Cart) -> Unit, onRemove: (Cart) -
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.End,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Button(
-                            onClick = { onEdit(item) },
-                            colors = ButtonDefaults.buttonColors(Color(252, 252, 252)),
-                            shape = RoundedCornerShape(13.dp),
-                            elevation = ButtonDefaults.buttonElevation(7.dp),
-                            modifier = Modifier
-                                .padding(vertical = 8.dp)
-                                .padding(start = 7.dp, end = 7.dp)
-                                .weight(1f)
-                        ) {
-                            Text(
-                                text = "Edit",
-                                style = TextStyle(
-                                    fontSize = 15.sp,
-                                    color = Color.Black,
-                                    fontFamily = FontFamily(Font(R.font.inria_serif_bold)),
-                                ),
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
                             onClick = { onRemove(item) },
-                            colors = ButtonDefaults.buttonColors(Color(252, 252, 252)),
+                            colors = ButtonDefaults.buttonColors(Color(250, 64, 50)),
                             shape = RoundedCornerShape(13.dp),
                             elevation = ButtonDefaults.buttonElevation(7.dp),
                             modifier = Modifier
-                                .padding(vertical = 8.dp)
+                                .padding(vertical = 7.dp, horizontal = 7.dp)
                                 .padding(start = 7.dp, end = 7.dp)
-                                .weight(1f)
+                                //.weight(1f)
                         ) {
                             Text(
                                 text = "Remove",
                                 style = TextStyle(
                                     fontSize = 15.sp,
-                                    color = Color.Black,
-                                    fontFamily = FontFamily(Font(R.font.inria_serif_bold)),
+                                    color = Color.White,
+                                    fontFamily = FontFamily(Font(R.font.poppins_semi_bold)),
                                 ),
-                                )
+                            )
                         }
                     }
                 }
@@ -339,9 +362,9 @@ fun BottomPaymentSection(navCtrl: NavController, totalPrice: Double, cartList: L
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp) // Sesuaikan tinggi sesuai kebutuhan
+            .height(80.dp)
             .shadow(7.dp, shape = RectangleShape, clip = false),
-        color = Color.White, // Warna latar belakang bagian bawah
+        color = Color.White,
     ) {
         Row(
             modifier = Modifier
@@ -369,21 +392,23 @@ fun BottomPaymentSection(navCtrl: NavController, totalPrice: Double, cartList: L
 
             Button(
                 onClick = {
-                    updateField(cartList)
-                    navCtrl.navigate("home")
-                    cartList.forEach { saveOrder(it) }
+                    //updateField(cartList)
+                    val gson = Gson()
+                    val cartListJson = gson.toJson(cartList)
+                    navCtrl.navigate("order/$cartListJson/payment")
+                    //cartList.forEach { saveOrder(it) }
                 },
                 shape = RoundedCornerShape(15.dp),
                 modifier = Modifier
-                    .weight(1.1f),
+                    .weight(1f),
                 colors = ButtonDefaults.buttonColors(Color(90, 181, 255))
             ) {
                 Text(
-                    text = "Lakukan Pembayaran",
+                    text = "Pesan",
                     style = TextStyle(
-                        fontSize = 14.sp,
-                        color = Color.Black,
-                        //fontFamily = FontFamily(Font(R.font.inria_serif_bold)),
+                        fontSize = 15.sp,
+                        color = Color.White,
+                        fontFamily = FontFamily(Font(R.font.poppins_semi_bold)),
                     ),
                 )
             }
@@ -401,7 +426,6 @@ private fun PreviewBookingList() {
     )
     BookingList(
         cartList = sampleCartList,
-        onEdit = {},
         onRemove = {}
     )
 }
