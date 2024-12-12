@@ -49,9 +49,9 @@ import com.example.sportify.R
 import com.example.sportify.Repository.saveOrder
 import com.example.sportify.Repository.updateField
 import com.example.sportify.layout_component.TopSection
-import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflect.TypeToken
 import com.google.firebase.database.FirebaseDatabase
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 private lateinit var database: FirebaseDatabase
 
@@ -66,7 +66,7 @@ fun OrderLayout(navCtrl: NavController, cartListJson: String, modifier: Modifier
 
     Scaffold(
         topBar = { TopSection() },
-        bottomBar = { BottomPaymentSection(navCtrl, cartList.sumOf { it.price }) },
+        bottomBar = { BottomPaymentSection(navCtrl, cartList.sumOf { it.price }, cartList)},
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -335,7 +335,7 @@ fun BookingList(cartList: List<Cart>, onEdit: (Cart) -> Unit, onRemove: (Cart) -
 }
 
 @Composable
-fun BottomPaymentSection(navCtrl: NavController, totalPrice: Double) {
+fun BottomPaymentSection(navCtrl: NavController, totalPrice: Double, cartList: List<Cart>) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -369,9 +369,9 @@ fun BottomPaymentSection(navCtrl: NavController, totalPrice: Double) {
 
             Button(
                 onClick = {
-                    //updateField(cartList)
+                    updateField(cartList)
                     navCtrl.navigate("home")
-                    //cartList.forEach { saveOrder(it) }
+                    cartList.forEach { saveOrder(it) }
                 },
                 shape = RoundedCornerShape(15.dp),
                 modifier = Modifier
@@ -406,10 +406,10 @@ private fun PreviewBookingList() {
     )
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun PreviewBottomPaymentSection() {
-    BottomPaymentSection(rememberNavController(),  1500.0)
-}
+//@Preview(showBackground = true)
+//@Composable
+//private fun PreviewBottomPaymentSection() {
+//    BottomPaymentSection(rememberNavController(),  1500.0)
+//}
 
 

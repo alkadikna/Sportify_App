@@ -287,7 +287,7 @@ fun TableScreen(
                 items(timeSlots) { time ->
                     Row(Modifier.fillMaxWidth()) {
                         listOf(1, 2, 3).forEach { i ->
-                            val lapanganName = "lapangan $fieldType $i"
+                            val lapanganName = "Lapangan $fieldType $i"
                             val reservation = reservations.value[time]?.get(lapanganName)
                             val isReserved = reservation != null && reservation != ""
                             TableCell(

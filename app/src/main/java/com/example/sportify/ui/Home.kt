@@ -365,35 +365,43 @@ fun UserBookingSection() {
 //            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
 //        ).
         Log.d("OrderList", "Orderlist: $orderList")
+        val calendar = Calendar.getInstance()
+        val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
+        val currentMinute = calendar.get(Calendar.MINUTE)
+
         orderList.forEach { order ->
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                color = Color.White,
-                elevation = 4.dp
-            ) {
-                Row(
-                    modifier = Modifier.padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            val targetTime = (order.endTime.toInt() * 60)
+            val currentTime = (currentHour * 60) + currentMinute
+            if(currentTime < targetTime){
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    color = Color.White,
+                    elevation = 4.dp
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.sample_field), // Replace with your image resource
-                        contentDescription = "Field Image",
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text(text = order.name, fontSize = 14.sp)
-                        Text(text = order.date, fontSize = 14.sp)
-                        Text(text = formatHour(order.startTime.toInt()) + "-" + formatHour(order.endTime.toInt()), fontSize = 14.sp)
+                    Row(
+                        modifier = Modifier.padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.sample_field), // Replace with your image resource
+                            contentDescription = "Field Image",
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(text = order.name, fontSize = 14.sp)
+                            Text(text = order.date, fontSize = 14.sp)
+                            Text(text = formatHour(order.startTime.toInt()) + "-" + formatHour(order.endTime.toInt()), fontSize = 14.sp)
+                        }
+                        Spacer(modifier = Modifier.weight(1f))
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowRight, // Replace with your arrow icon resource
+                            contentDescription = "Arrow Icon",
+                        )
                     }
-                    Spacer(modifier = Modifier.weight(1f))
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowRight, // Replace with your arrow icon resource
-                        contentDescription = "Arrow Icon",
-                    )
                 }
             }
         }

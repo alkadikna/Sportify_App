@@ -130,6 +130,14 @@ fun Form(
     var endTime by remember { mutableStateOf("") }
     val nContext = LocalContext.current
 
+    val calendar = Calendar.getInstance()
+    val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
+    val currentMinute = calendar.get(Calendar.MINUTE)
+    val today = remember {
+        mutableStateOf(
+            SimpleDateFormat("dd-MM-yyyy", Locale("id","ID")).format(calendar.time)
+        )
+    }
     if (isDropdownOpen) {
         ModalBottomSheet(
             onDismissRequest = { setIsDropdownOpen(false) }, // Close the dropdown when dismissed
@@ -204,7 +212,33 @@ fun Form(
                     if (startTime.isNotEmpty() && endTime.isNotEmpty()) {
                         val isValid = startTime.toIntOrNull() != null && endTime.toIntOrNull() != null
                         if (isValid) {
-                            navCtrl.navigate("result/$selectedSport/$startTime/$endTime/${selectedDate.value}")
+                            if(startTime < endTime){
+                                if(selectedDate.value == today.value){
+                                    val targetTime = (startTime.toInt() * 60)
+                                    val currentTime = (currentHour * 60) + currentMinute
+                                    if(currentTime < targetTime){
+                                        navCtrl.navigate("result/$selectedSport/$startTime/$endTime/${selectedDate.value}")
+                                    }
+                                    else{
+                                        Toast.makeText(
+                                            nContext,
+                                            "Waktu awal tidak valid!",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                }
+                                else{
+                                    navCtrl.navigate("result/$selectedSport/$startTime/$endTime/${selectedDate.value}")
+                                }
+
+                            }
+                            else{
+                                Toast.makeText(
+                                    nContext,
+                                    "Waktu awal harus lebih kecil dari waktu akhir!",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
                         } else {
                             Toast.makeText(
                                 nContext,
@@ -212,6 +246,7 @@ fun Form(
                                 Toast.LENGTH_LONG
                             ).show()
                         }
+
                     } else {
                         Toast.makeText(
                             nContext,

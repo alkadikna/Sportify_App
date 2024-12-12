@@ -72,10 +72,10 @@ class MainActivity : ComponentActivity() {
                         val cartListJson = backStackEntry.arguments?.getString("cartListJson")?: "[]"
                         OrderLayout(navCtrl = navController, cartListJson)
                     }
-                    composable("notifikasi"){ NotificationScreen() }
+//                    composable("notifikasi"){ NotificationScreen(navCtrl = navController) }
                 }
                 LaunchedEffect(Unit) {
-//                    InitDb()
+                    InitDb()
                     deleteOutdatedSchedule()
 //                    deleteOutdatedTimes()s
                 }
