@@ -286,7 +286,7 @@ fun TableScreen(
             IconButton(
                 onClick = { onDateChange("previous") },
                 modifier = Modifier
-                    .background(Color.Gray, shape = CircleShape)
+                    .background(Color.Black, shape = CircleShape)
                     .size(40.dp)
             ) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Previous", tint = Color.White)
@@ -305,7 +305,7 @@ fun TableScreen(
             IconButton(
                 onClick = { onDateChange("next") },
                 modifier = Modifier
-                    .background(Color.Gray, shape = CircleShape)
+                    .background(Color.Black, shape = CircleShape)
                     .size(40.dp)
             ) {
                 Icon(Icons.Default.ArrowForward, contentDescription = "Next", tint = Color.White)
@@ -321,7 +321,7 @@ fun TableScreen(
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = colorResource(id = R.color.main_blue))
+                CircularProgressIndicator(color = Color.Gray)
             }
         } else {
             // Header kolom
@@ -379,7 +379,7 @@ fun RowScope.TableCellParent(
             .background(backgroundColor)
             .padding(8.dp)
     ) {
-        Text(text = text, style = MaterialTheme.typography.body2, textAlign = TextAlign.Center, color = Color.White, fontWeight = FontWeight.Bold)
+        Text(text = text, style = MaterialTheme.typography.body2, textAlign = TextAlign.Center, color = Color.Black, fontWeight = FontWeight.Bold)
     }
 }
 
