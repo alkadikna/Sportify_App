@@ -26,6 +26,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -391,9 +392,11 @@ fun BottomPaymentSection(navCtrl: NavController, totalPrice: Double, cartList: L
 
             Button(
                 onClick = {
-                    updateField(cartList)
-                    navCtrl.navigate("home")
-                    cartList.forEach { saveOrder(it) }
+                    //updateField(cartList)
+                    val gson = Gson()
+                    val cartListJson = gson.toJson(cartList)
+                    navCtrl.navigate("order/$cartListJson/payment")
+                    //cartList.forEach { saveOrder(it) }
                 },
                 shape = RoundedCornerShape(15.dp),
                 modifier = Modifier

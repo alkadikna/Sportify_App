@@ -20,6 +20,7 @@ import com.example.sportify.ui.HomeLayout
 import com.example.sportify.ui.LoginLayout
 //import com.example.sportify.ui.NotificationScreen
 import com.example.sportify.ui.OrderLayout
+import com.example.sportify.ui.PaymentLayout
 import com.example.sportify.ui.ProfileLayout
 import com.example.sportify.ui.RegisterLayout
 import com.example.sportify.ui.ScheduleLayout
@@ -72,10 +73,16 @@ class MainActivity : ComponentActivity() {
                         val cartListJson = backStackEntry.arguments?.getString("cartListJson")?: "[]"
                         OrderLayout(navCtrl = navController, cartListJson)
                     }
+                    composable("order/{cartListJson}/payment") {
+                        backStackEntry ->
+                        val cartListJson = backStackEntry.arguments?.getString("cartListJson")?: "[]"
+                        PaymentLayout(navCtrl = navController, cartListJson = cartListJson)
+                    }
+
 //                    composable("notifikasi"){ NotificationScreen(navCtrl = navController) }
                 }
                 LaunchedEffect(Unit) {
-                    InitDb()
+                    //InitDb()
                     deleteOutdatedSchedule()
 //                    deleteOutdatedTimes()s
                 }
