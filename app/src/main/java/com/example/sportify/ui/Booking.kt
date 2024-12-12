@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +42,7 @@ private lateinit var auth: FirebaseAuth
 private lateinit var googleSignInClient: GoogleSignInClient
 private lateinit var database: FirebaseDatabase
 
+@SuppressLint("UnrememberedMutableState")
 @Composable
 fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
     // State for selected date
@@ -52,14 +54,14 @@ fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
     }
 
     val context = LocalContext.current
-    var isDropdownOpen by remember { mutableStateOf(false) } // Control Modal visibility
+    var isDropdownOpen by remember { mutableStateOf(false) }
+    val showDatePicker = remember { mutableStateOf(false) }
 
     // Function to update date
     fun updateDate(action: String) {
         when (action) {
             "previous" -> calendar.add(Calendar.DAY_OF_MONTH, -1)
             "next" -> calendar.add(Calendar.DAY_OF_MONTH, 1)
-            "select" -> { /* Handled by DatePicker */ }
         }
         val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale("id", "ID"))
         selectedDate.value = dateFormat.format(calendar.time)
@@ -93,16 +95,7 @@ fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
                     selectedDate = selectedDate,
                     onDateChange = { action ->
                         if (action == "select") {
-                            DatePickerDialog(
-                                context,
-                                { _, year, month, dayOfMonth ->
-                                    calendar.set(year, month, dayOfMonth)
-                                    updateDate("") // Reformat date after selection
-                                },
-                                calendar.get(Calendar.YEAR),
-                                calendar.get(Calendar.MONTH),
-                                calendar.get(Calendar.DAY_OF_MONTH)
-                            ).show()
+                            showDatePicker.value = true
                         } else {
                             updateDate(action) // Previous or Next
                         }
@@ -113,6 +106,18 @@ fun BookingLayout(modifier: Modifier = Modifier, navCtrl: NavController) {
             }
         }
     )
+
+    if (showDatePicker.value) {
+        ShowDatePicker(
+            calendar = calendar,
+            onDateSelected = { year, month, dayOfMonth ->
+                calendar.set(year, month, dayOfMonth)
+                updateDate("select")
+                showDatePicker.value = false  // Tutup DatePicker setelah pemilihan tanggal
+            },
+            showDatePicker = showDatePicker
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -256,6 +261,56 @@ fun DropdownItem(label: String, onClick: () -> Unit) {
         )
     }
 }
+
+@Composable
+fun ShowDatePicker2(
+    calendar: Calendar,
+    onDateSelected: (Int, Int, Int) -> Unit,
+    showDatePicker: MutableState<Boolean>
+) {
+    val context = LocalContext.current
+
+    if (showDatePicker.value) {
+        val datePickerDialog = DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                onDateSelected(year, month, dayOfMonth)
+                showDatePicker.value = false
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+
+        // Set the minimum date to today
+        val currentDate = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        datePickerDialog.datePicker.minDate = currentDate.timeInMillis
+
+        // Set the maximum date to one week from today
+        val oneWeekLater = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.DAY_OF_MONTH, 7)
+        }
+        datePickerDialog.datePicker.maxDate = oneWeekLater.timeInMillis
+
+        datePickerDialog.setOnCancelListener {
+            showDatePicker.value = false
+        }
+
+        LaunchedEffect(datePickerDialog) {
+            datePickerDialog.show()
+        }
+    }
+}
+
 
 @Composable
 fun CustomDropdownMenuContent(
