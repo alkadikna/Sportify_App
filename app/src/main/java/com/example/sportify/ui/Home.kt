@@ -451,16 +451,33 @@ fun AvailableFieldsSection() {
 @Composable
 fun UserBookingSection() {
     val orderList = remember { mutableStateListOf<Cart>() }
+    val isLoading = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
+        isLoading.value = true
+        kotlinx.coroutines.delay(1000)
         getOrder { orders ->
+            isLoading.value = false
             orderList.clear()  // Clear previous orders
             orderList.addAll(orders)  // Add new orders
         }
     }
 
     Column {
-        Text(text = "Pesanan anda", style = MaterialTheme.typography.bodyLarge)
+        Row{
+            Icon(
+                imageVector = Icons.Default.Bookmarks,
+                contentDescription = "Reservasi Icon",
+                tint = Color.Black ,
+                modifier = Modifier.size(15.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Reservasi anda",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -470,13 +487,50 @@ fun UserBookingSection() {
         val currentMinute = calendar.get(Calendar.MINUTE)
         val today = SimpleDateFormat("dd-MM-yyyy", Locale("id","ID")).format(calendar.time)
 
+        if(isLoading.value){
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.Gray, modifier = Modifier.size(15.dp))
+            }
+        } else {
+            val validOrders = orderList.filter { order ->
+                val targetTime = (order.endTime.toInt() * 60)
+                val currentTime = (currentHour * 60) + currentMinute
+                order.date >= today.toString() && currentTime < targetTime
+            }
 
-        orderList.forEach { order ->
-            val targetTime = (order.endTime.toInt() * 60)
-            val currentTime = (currentHour * 60) + currentMinute
-
-            if(order.date >= today.toString()){
-                if(currentTime < targetTime){
+            if (validOrders.isEmpty()) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Icon(
+                            imageVector = Icons.Default.CrisisAlert,
+                            contentDescription = "No Reservations Icon",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Anda belum memiliki reservasi",
+                            fontSize = 16.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
+            } else {
+                validOrders.forEach { order ->
                     UserBookingCard(order = order)
                 }
             }
