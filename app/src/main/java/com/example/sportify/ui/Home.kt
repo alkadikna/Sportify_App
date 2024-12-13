@@ -430,13 +430,6 @@ fun AvailableFieldsSection() {
                                                     .padding(horizontal = 5.dp)
                                             )
                                         }
-                                        else{
-                                            Text(
-                                                text = "Tidak ada lapangan yang tersedia",
-                                                fontSize = 12.sp,
-                                                modifier = Modifier.padding(horizontal = 5.dp)
-                                            )
-                                        }
                                     }
                                 }
                             }
