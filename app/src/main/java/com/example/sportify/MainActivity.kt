@@ -88,7 +88,7 @@ class MainActivity : ComponentActivity() {
                     composable("order/{cartListJson}/receipt") {
                         backStackEntry ->
                         val cartListJson = backStackEntry.arguments?.getString("cartListJson")?: "[]"
-                        ReceiptLayout(cartListJson = cartListJson, auth = auth)
+                        ReceiptLayout(navCrtl = navController ,cartListJson = cartListJson, auth = auth)
                     }
 
 //                    composable("notifikasi"){ NotificationScreen(navCtrl = navController) }
