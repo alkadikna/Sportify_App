@@ -440,18 +440,6 @@ fun AvailableFieldsSection() {
                                     }
                                 }
                             }
-//                        Text(
-//                            text = fieldType[index],
-//                            fontWeight = FontWeight.Bold,
-//                            fontSize = 15.sp,
-//                            modifier = Modifier.padding(horizontal = 5.dp)
-//                        )
-//                        Text(
-//                            text = "16.00-18.00",
-//                            fontSize = 15.sp,
-//                            color = Color.Gray,
-//                            modifier = Modifier.padding(5.dp)
-//                        )
                         }
                     }
                 }
@@ -463,129 +451,70 @@ fun AvailableFieldsSection() {
 @Composable
 fun UserBookingSection() {
     val orderList = remember { mutableStateListOf<Cart>() }
-    val isLoading = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        isLoading.value = true
-        kotlinx.coroutines.delay(1000)
         getOrder { orders ->
-            isLoading.value = false
             orderList.clear()  // Clear previous orders
             orderList.addAll(orders)  // Add new orders
         }
     }
 
     Column {
-        Row{
-            Icon(
-                imageVector = Icons.Default.Bookmarks,
-                contentDescription = "Reservasi Icon",
-                tint = Color.Black ,
-                modifier = Modifier.size(15.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Reservasi anda",
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
+        Text(text = "Pesanan anda", style = MaterialTheme.typography.bodyLarge)
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Sample bookings
-//        listOf(
-//            "Lapangan Badminton A3, Selasa 03 Okt 2023, 16:00 - 18:00",
-//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
-//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
-//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
-//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
-//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
-//            "Lapangan Badminton B1, Selasa 03 Okt 2023, 14:00 - 16:00",
-//        ).
         Log.d("OrderList", "Orderlist: $orderList")
         val calendar = Calendar.getInstance()
         val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
         val currentMinute = calendar.get(Calendar.MINUTE)
+        val today = SimpleDateFormat("dd-MM-yyyy", Locale("id","ID")).format(calendar.time)
 
-        if(isLoading.value){
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = Color.Gray, modifier = Modifier.size(15.dp))
-            }
-        } else {
-            val validOrders = orderList.filter { order ->
-                val targetTime = (order.endTime.toInt() * 60)
-                val currentTime = (currentHour * 60) + currentMinute
-                currentTime < targetTime
-            }
 
-            if (validOrders.isEmpty()) {
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Spacer(modifier = Modifier.height(20.dp))
-                        Icon(
-                            imageVector = Icons.Default.CrisisAlert,
-                            contentDescription = "No Reservations Icon",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Anda belum memiliki reservasi",
-                            fontSize = 16.sp,
-                            color = Color.Gray
-                        )
-                    }
-                }
-            } else {
-                validOrders.forEach { order ->
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        color = Color.White,
-                        elevation = 4.dp
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.sample_field), // Replace with your image resource
-                                contentDescription = "Field Image",
-                                modifier = Modifier.size(48.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(text = order.name, fontSize = 14.sp)
-                                Text(text = order.date, fontSize = 14.sp)
-                                Text(text = formatHour(order.startTime.toInt()) + "-" + formatHour(order.endTime.toInt()), fontSize = 14.sp)
-                            }
-                            Spacer(modifier = Modifier.weight(1f))
-                            Icon(
-                                imageVector = Icons.Default.KeyboardArrowRight, // Replace with your arrow icon resource
-                                contentDescription = "Arrow Icon"
-                            )
-                        }
-                    }
+        orderList.forEach { order ->
+            val targetTime = (order.endTime.toInt() * 60)
+            val currentTime = (currentHour * 60) + currentMinute
+
+            if(order.date >= today.toString()){
+                if(currentTime < targetTime){
+                    UserBookingCard(order = order)
                 }
             }
         }
+    }
+}
 
+@Composable
+fun UserBookingCard(order: Cart){
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        color = Color.White,
+        elevation = 4.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.sample_field), // Replace with your image resource
+                contentDescription = "Field Image",
+                modifier = Modifier.size(48.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
+                Text(text = order.name, fontSize = 14.sp)
+                Text(text = order.date, fontSize = 14.sp)
+                Text(text = formatHour(order.startTime.toInt()) + "-" + formatHour(order.endTime.toInt()), fontSize = 14.sp)
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowRight, // Replace with your arrow icon resource
+                contentDescription = "Arrow Icon",
+            )
+        }
     }
 }
 
