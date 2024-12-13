@@ -126,9 +126,13 @@ fun ProfileLayout(navController: NavController, auth: FirebaseAuth) {
                 Section(
                     title = "Pengaturan",
                     items = listOf(
-                        Triple("Edit Profile", R.drawable.ic_baseline_account_box, ::editProfile),
-                        Triple("Privasi", R.drawable.dashicons_privacy, ::privasi),
-                        Triple("Ganti Bahasa", R.drawable.mdi_language, ::gantiBahasa)
+                        Triple("Edit Profile", R.drawable.ic_baseline_account_box) {
+                            navController.navigate(
+                                "profile/edit"
+                            )
+                        },
+                        Triple("Privasi", R.drawable.dashicons_privacy, null),
+                        Triple("Ganti Bahasa", R.drawable.mdi_language, null)
                     )
                 )
 
@@ -155,7 +159,7 @@ fun ProfileLayout(navController: NavController, auth: FirebaseAuth) {
 
                 //Log Out
                 LogoutButton(navController, auth, context)
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
             }
         }
@@ -377,18 +381,7 @@ fun LogoutButton(navController : NavController, auth: FirebaseAuth, context : Co
     }
 }
 
-//fungsi-fungsi fitur
-fun editProfile() {
 
-}
-
-fun privasi() {
-
-}
-
-fun gantiBahasa() {
-
-}
 //@Preview
 //@Composable
 //fun ProfileScreenPreview() {

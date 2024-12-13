@@ -18,6 +18,7 @@ import com.example.sportify.Model.Order
 import com.example.sportify.Repository.deleteOutdatedSchedule
 import com.example.sportify.Repository.deleteOutdatedTimes
 import com.example.sportify.ui.BookingLayout
+import com.example.sportify.ui.EditProfileLayout
 import com.example.sportify.ui.HomeLayout
 import com.example.sportify.ui.LoginLayout
 //import com.example.sportify.ui.NotificationScreen
@@ -54,6 +55,7 @@ class MainActivity : ComponentActivity() {
                     composable("schedule") { ScheduleLayout(navCtrl = navController) }
                     composable("booking") { BookingLayout(navCtrl = navController)}
                     composable("profile") { ProfileLayout(navController = navController, auth = auth) }
+                    composable("profile/edit") { EditProfileLayout(navCtrl = navController, auth = auth)}
                     composable (
                         "result/{fieldType}/{start}/{end}/{selectedDate}",
                         arguments = listOf(
