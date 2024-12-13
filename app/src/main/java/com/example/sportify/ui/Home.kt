@@ -566,11 +566,11 @@ fun UserBookingCard(order: Cart){
                 Text(text = order.date, fontSize = 14.sp)
                 Text(text = formatHour(order.startTime.toInt()) + "-" + formatHour(order.endTime.toInt()), fontSize = 14.sp)
             }
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowRight, // Replace with your arrow icon resource
-                contentDescription = "Arrow Icon",
-            )
+//            Spacer(modifier = Modifier.weight(1f))
+//            Icon(
+//                imageVector = Icons.Default.KeyboardArrowRight, // Replace with your arrow icon resource
+//                contentDescription = "Arrow Icon",
+//            )
         }
     }
 }

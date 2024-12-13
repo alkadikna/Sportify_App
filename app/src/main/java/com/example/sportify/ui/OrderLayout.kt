@@ -114,7 +114,9 @@ fun OrderLayout(navCtrl: NavController, cartListJson: String, modifier: Modifier
                         text = "+ Tambah Pesan",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { /* TODO: Handle Add Order */ }
+                            .clickable {
+                                //
+                            }
                             .padding(vertical = 16.dp),
                         textAlign = TextAlign.Center,
                         color = Color.Blue,

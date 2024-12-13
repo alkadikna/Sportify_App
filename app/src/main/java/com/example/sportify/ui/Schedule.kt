@@ -286,10 +286,9 @@ fun TableScreen(
             IconButton(
                 onClick = { onDateChange("previous") },
                 modifier = Modifier
-                    .background(Color.Black, shape = CircleShape)
                     .size(40.dp)
             ) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Previous", tint = Color.White)
+                Icon(Icons.Default.ArrowBack, contentDescription = "Previous", tint = Color.Gray)
             }
             TextButton(onClick = { showDatePicker.value = true }) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -305,10 +304,9 @@ fun TableScreen(
             IconButton(
                 onClick = { onDateChange("next") },
                 modifier = Modifier
-                    .background(Color.Black, shape = CircleShape)
                     .size(40.dp)
             ) {
-                Icon(Icons.Default.ArrowForward, contentDescription = "Next", tint = Color.White)
+                Icon(Icons.Default.ArrowForward, contentDescription = "Next", tint = Color.Gray)
             }
         }
         
