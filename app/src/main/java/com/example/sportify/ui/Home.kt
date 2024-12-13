@@ -491,10 +491,18 @@ fun UserBookingSection() {
             }
         } else {
             val validOrders = orderList.filter { order ->
-                val targetTime = (order.endTime.toInt() * 60)
-                val currentTime = (currentHour * 60) + currentMinute
-                order.date >= today.toString() && currentTime < targetTime
+                val orderDate = order.date
+                val todayDate = today.toString()
+
+                if (orderDate == todayDate) {
+                    val targetTime = (order.endTime.toInt() * 60)
+                    val currentTime = (currentHour * 60) + currentMinute
+                    currentTime < targetTime
+                } else {
+                    orderDate > todayDate
+                }
             }
+            Log.d("ValidOrder", "Data: $validOrders")
 
             if (validOrders.isEmpty()) {
                 Box(

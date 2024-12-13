@@ -37,6 +37,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.sportify.R
+import com.example.sportify.Repository.saveOrder
+import com.example.sportify.Repository.updateField
 import com.example.sportify.layout_component.TopSection
 import com.google.firebase.database.FirebaseDatabase
 import com.google.gson.Gson
@@ -145,11 +147,11 @@ fun PaymentLayout(navCtrl: NavController, cartListJson: String) {
                         R.drawable.cash_payment,
                         label = "Cash Payment",
                         paymentMethod = {
-                            //updateField(cartList)
+                            updateField(cartList)
                             val gson = Gson()
                             val cartListJson = gson.toJson(cartList)
                             navCtrl.navigate("order/$cartListJson/receipt")
-                            //cartList.forEach { saveOrder(it) }
+                            cartList.forEach { saveOrder(it) }
                         }
                     )
                 }
