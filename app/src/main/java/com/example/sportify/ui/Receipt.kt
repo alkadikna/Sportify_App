@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -59,7 +60,7 @@ fun getCurrentDateTime(): String {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ReceiptLayout(cartListJson: String, auth: FirebaseAuth) {
+fun ReceiptLayout(navCrtl: NavController, cartListJson: String, auth: FirebaseAuth) {
     database = FirebaseDatabase.getInstance("https://sportify-3eb54-default-rtdb.asia-southeast1.firebasedatabase.app")
 
     val gson = Gson()
@@ -87,7 +88,21 @@ fun ReceiptLayout(cartListJson: String, auth: FirebaseAuth) {
     }
 
     Scaffold(
-        topBar = { TopSection() },
+        topBar = {
+            Box {
+                TopSection()
+
+                IconButton(
+                    onClick = { navCrtl.navigate("home") },
+                    modifier = Modifier.padding(start = 5.dp, top = 5.dp)
+                ) {
+                    Icon(painter = painterResource(id = R.drawable.back_arrow),
+                        contentDescription = "back",
+                        modifier = Modifier
+                            .size(20.dp))
+                }
+            }
+        },
         bottomBar = {}
     ) { paddingValues ->
         Column(
@@ -264,13 +279,13 @@ fun OrderDetailRow(name: String, schedule: String, price: Double) {
 //    ReceiptLayout("")
 //}
 
-@Preview
-@Composable
-private fun OrderDetailCardPreview() {
-    val sampleCartList = listOf(
-        Cart("A3", "Sabtu, 19 Okt 2024", "14", "16", 8000.0),
-        Cart("B1", "Sabtu, 19 Okt 2024", "14", "16", 8000.0)
-    )
-
-    OrderDetailCard(sampleCartList)
-}
+//@Preview
+//@Composable
+//private fun OrderDetailCardPreview() {
+//    val sampleCartList = listOf(
+//        Cart("A3", "Sabtu, 19 Okt 2024", "14", "16", 8000.0),
+//        Cart("B1", "Sabtu, 19 Okt 2024", "14", "16", 8000.0)
+//    )
+//
+//    OrderDetailCard(sampleCartList)
+//}
