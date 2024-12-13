@@ -423,12 +423,14 @@ fun AvailableFieldsSection() {
                                 items(timeList){ time ->
                                     time.fieldList.forEach{ field ->
                                         if(field.name.contains(fieldType[index], ignoreCase = true)){
-                                            Text(
-                                                text = field.name,
-                                                fontSize = 12.sp,
-                                                modifier = Modifier
-                                                    .padding(horizontal = 5.dp)
-                                            )
+                                            if(field.isAvailable){
+                                                Text(
+                                                    text = field.name,
+                                                    fontSize = 12.sp,
+                                                    modifier = Modifier
+                                                        .padding(horizontal = 5.dp)
+                                                )
+                                            }
                                         }
                                     }
                                 }
