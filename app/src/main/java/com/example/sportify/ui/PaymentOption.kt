@@ -144,7 +144,13 @@ fun PaymentLayout(navCtrl: NavController, cartListJson: String) {
                     PaymentOptionItem(
                         R.drawable.cash_payment,
                         label = "Cash Payment",
-                        paymentMethod = {}
+                        paymentMethod = {
+                            //updateField(cartList)
+                            val gson = Gson()
+                            val cartListJson = gson.toJson(cartList)
+                            navCtrl.navigate("order/$cartListJson/receipt")
+                            //cartList.forEach { saveOrder(it) }
+                        }
                     )
                 }
             }

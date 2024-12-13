@@ -1,9 +1,11 @@
 package com.example.sportify
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
@@ -22,6 +24,7 @@ import com.example.sportify.ui.LoginLayout
 import com.example.sportify.ui.OrderLayout
 import com.example.sportify.ui.PaymentLayout
 import com.example.sportify.ui.ProfileLayout
+import com.example.sportify.ui.ReceiptLayout
 import com.example.sportify.ui.RegisterLayout
 import com.example.sportify.ui.ScheduleLayout
 import com.example.sportify.ui.TestingReadDB
@@ -33,12 +36,14 @@ import com.google.firebase.ktx.Firebase
 private lateinit var auth: FirebaseAuth
 
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         auth = Firebase.auth
         val currentUser = auth.currentUser
         val startDestination = if (currentUser != null) "home" else "login"
+
         setContent {
             SportifyTheme {
                 val navController =  rememberNavController()
@@ -77,6 +82,11 @@ class MainActivity : ComponentActivity() {
                         backStackEntry ->
                         val cartListJson = backStackEntry.arguments?.getString("cartListJson")?: "[]"
                         PaymentLayout(navCtrl = navController, cartListJson = cartListJson)
+                    }
+                    composable("order/{cartListJson}/receipt") {
+                        backStackEntry ->
+                        val cartListJson = backStackEntry.arguments?.getString("cartListJson")?: "[]"
+                        ReceiptLayout(cartListJson = cartListJson, auth = auth)
                     }
 
 //                    composable("notifikasi"){ NotificationScreen(navCtrl = navController) }
