@@ -348,6 +348,7 @@ fun AvailableFieldsSection() {
             Spacer(modifier = Modifier.weight(1f))
             IconButton(
                 onClick = {
+                    timeList.clear()
                     scope.launch(Dispatchers.IO) {
                         isLoading.value = true
                         kotlinx.coroutines.delay(1000)
