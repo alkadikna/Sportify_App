@@ -241,7 +241,7 @@ fun FieldTypeSection(navCtrl: NavController) {
             val fieldTypes = listOf(
                 "Badminton" to R.drawable.bultang,
                 "Futsal" to R.drawable.futsal,
-                "Tennis" to R.drawable.tennis,
+                "Tenis" to R.drawable.tennis,
                 "Basket" to R.drawable.basket,
                 "Coming Soon" to null // placeholder
             )
