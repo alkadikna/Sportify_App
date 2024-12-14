@@ -167,7 +167,7 @@ fun FloatingDropDown(selectedFieldType: MutableState<String>) {
 @Composable
 fun DropDown(modifier: Modifier, selectedFieldType: MutableState<String>) {
     val context = LocalContext.current
-    val listSport = arrayOf("Badminton", "Tennis", "Futsal", "Basket")
+    val listSport = arrayOf("Badminton", "Tenis", "Futsal", "Basket")
     var expanded by remember { mutableStateOf(false) }
 
     Column(

@@ -153,7 +153,7 @@ fun Form(
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         ) {
             CustomDropdownMenuContent(
-                items = listOf("Badminton", "Basket", "Tennis", "Futsal"),
+                items = listOf("Badminton", "Basket", "Tenis", "Futsal"),
                 onSelect = { sport ->
                     selectedSport = sport
                     setIsDropdownOpen(false)
@@ -326,7 +326,7 @@ fun CustomDropdownMenuContent(
     val icons = mapOf(
         "Badminton" to R.drawable.v_badminton,
         "Basket" to R.drawable.v_basket,
-        "Tennis" to R.drawable.v_tennis,
+        "Tenis" to R.drawable.v_tennis,
         "Futsal" to R.drawable.v_soccer
     )
 
