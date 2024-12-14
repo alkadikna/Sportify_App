@@ -99,6 +99,21 @@ fun signup(email: String, username: String, pass: String, nContext: Context, nav
         }
 }
 
+fun extractNameAndUsername(displayName: String): Pair<String, String> {
+    val regex = Regex("^(.*)\\s\\((.*)\\)$")
+    val matchResult = regex.find(displayName)
+
+    return if (matchResult != null) {
+        val name = matchResult.groupValues[1].trim()
+        val username = matchResult.groupValues[2].trim()
+        name to username
+    } else {
+        val name = displayName.trim()
+        val username = name.split(" ").first()
+        name to username
+    }
+}
+
 @Composable
 fun RegisterLayout(
     modifier: Modifier = Modifier,
@@ -119,13 +134,19 @@ fun RegisterLayout(
                     .addOnCompleteListener(activity) { tasks ->
                         if (tasks.isSuccessful) {
                             val userId = auth.currentUser?.uid
+                            val displayName = account.displayName ?: "-"
+
+                            // Memisahkan nama dan username
+                            val (name, username) = extractNameAndUsername(displayName)
+
                             val userData = mapOf(
                                 "email" to (account.email ?: "-"),
-                                "username" to (account.displayName ?: "-"),
-                                "name" to (account.displayName ?: "-"),
+                                "username" to username,
+                                "name" to name,
                                 "profilePhoto" to (account.photoUrl?.toString() ?: "default_profile_photo_url"),
                                 "phone" to "-"
                             )
+
                             FirebaseDatabase.getInstance().getReference("users").child(userId!!).setValue(userData)
 
                             navCtrl.navigate("home")
