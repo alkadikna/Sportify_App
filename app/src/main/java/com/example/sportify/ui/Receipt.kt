@@ -1,8 +1,5 @@
 package com.example.sportify.ui
 
-import android.os.Build
-import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,7 +26,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.sportify.Model.Receipt
+import com.example.sportify.Model.ReceiptItem
 import com.example.sportify.R
+import com.example.sportify.Repository.getReceiptData
 import com.example.sportify.layout_component.TopSection
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -41,50 +41,29 @@ import com.google.gson.reflect.TypeToken
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-private lateinit var database: FirebaseDatabase
 
 @Composable
-fun generateOrderID(): String {
-    val prefix = "SPTF"
-    val randomNumber = (100000..999999).random()
-    return "$prefix$randomNumber"
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun getCurrentDateTime(): String {
-    val currentDateTime = LocalDateTime.now()
-    val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm")
-    return currentDateTime.format(formatter)
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun ReceiptLayout(navCrtl: NavController, cartListJson: String, auth: FirebaseAuth) {
-    database = FirebaseDatabase.getInstance("https://sportify-3eb54-default-rtdb.asia-southeast1.firebasedatabase.app")
-
-    val gson = Gson()
-    val listType = object : TypeToken<List<Cart>>() {}.type
-    val cartList: List<Cart> = gson.fromJson(cartListJson, listType)
+fun ReceiptLayout(navCtrl: NavController, auth: FirebaseAuth, receiptKey: String) {
+    val database = FirebaseDatabase.getInstance("https://sportify-3eb54-default-rtdb.asia-southeast1.firebasedatabase.app")
 
     val currentUser = auth.currentUser
-    var username by remember { mutableStateOf("-") }
-
-    fun fetchUserData(uid: String) {
-        val userData = database.getReference("users").child(uid)
-        userData.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                username = snapshot.child("username").getValue(String::class.java) ?: "-"
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                Log.e("ReceiptLayout", "Failed to fetch user data: ${error.message}")
-            }
-        })
-    }
+    //var username by remember { mutableStateOf("-") }
+    var receipt by remember { mutableStateOf<Receipt?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(currentUser) {
-        currentUser?.uid?.let { fetchUserData(it) }
+        currentUser?.uid?.let { userId ->
+            getReceiptData(
+                userId = userId,
+                receiptKey = receiptKey,
+                onSuccess = { fetchedReceipt ->
+                    receipt = fetchedReceipt
+                },
+                onError = { error ->
+                    errorMessage = error
+                }
+            )
+        }
     }
 
     Scaffold(
@@ -93,13 +72,14 @@ fun ReceiptLayout(navCrtl: NavController, cartListJson: String, auth: FirebaseAu
                 TopSection()
 
                 IconButton(
-                    onClick = { navCrtl.navigate("home") },
+                    onClick = { navCtrl.navigate("home") },
                     modifier = Modifier.padding(start = 5.dp, top = 5.dp)
                 ) {
-                    Icon(painter = painterResource(id = R.drawable.back_arrow),
+                    Icon(
+                        painter = painterResource(id = R.drawable.back_arrow),
                         contentDescription = "back",
-                        modifier = Modifier
-                            .size(20.dp))
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         },
@@ -111,24 +91,37 @@ fun ReceiptLayout(navCrtl: NavController, cartListJson: String, auth: FirebaseAu
                 .fillMaxSize()
                 .background(Color.White)
         ) {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth()
-            ) {
-                PaymentDetailCard(cartList, username)
-                Spacer(modifier = Modifier.height(16.dp))
-                OrderDetailCard(cartList)
+            if (errorMessage != null) {
+                Text(
+                    text = "Error: $errorMessage",
+                    color = Color.Red,
+                    modifier = Modifier.padding(16.dp)
+                )
+            } else if (receipt == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentSize(Alignment.Center)
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                ) {
+                    PaymentDetailCard(receipt)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OrderDetailCard(receipt!!.items)
+                }
             }
         }
     }
 }
 
-
-
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun PaymentDetailCard(cartList: List<Cart>, username: String) {
+fun PaymentDetailCard(receipt: Receipt?) {
     Card(
         shape = RoundedCornerShape(8.dp),
         elevation = 4.dp,
@@ -144,10 +137,73 @@ fun PaymentDetailCard(cartList: List<Cart>, username: String) {
                 )
             )
             Spacer(modifier = Modifier.height(13.dp))
-            PaymentDetailRow(label = "ID Pesanan", value = generateOrderID())
-            PaymentDetailRow(label = "Dipesan Oleh", value = username)
-            PaymentDetailRow(label = "Waktu Pemesanan", value = getCurrentDateTime())
-            PaymentDetailRow(label = "Jumlah Pembayaran", value = "Rp. ${cartList.sumOf { it.price }}")
+            PaymentDetailRow(label = "ID Pesanan", value = receipt?.orderId ?: "-")
+            PaymentDetailRow(label = "Dipesan Oleh", value = receipt?.username ?: "-")
+            PaymentDetailRow(label = "Waktu Pemesanan", value = receipt?.orderTime ?: "-")
+            PaymentDetailRow(label = "Jumlah Pembayaran", value = "Rp. ${receipt?.totalAmount ?: 0.0}")
+        }
+    }
+}
+
+@Composable
+fun OrderDetailCard(items: List<ReceiptItem>?) {
+    Card(
+        shape = RoundedCornerShape(8.dp),
+        elevation = 4.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Detail Pesanan",
+                style = TextStyle(
+                    fontSize = 22.sp,
+                    color = Color.Black,
+                    fontFamily = FontFamily(Font(R.font.inria_serif_bold)),
+                )
+            )
+            Spacer(modifier = Modifier.height(13.dp))
+
+            if (!items.isNullOrEmpty()) {
+                LazyColumn {
+                    items(items) { item ->
+                        OrderDetailRow(item.name, item.schedule, item.price)
+                    }
+                }
+
+                Divider(color = Color.Gray, thickness = 1.dp)
+                Spacer(modifier = Modifier.height(13.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Jumlah Pembayaran",
+                        style = TextStyle(
+                            fontSize = 17.sp,
+                            color = Color.Black,
+                            fontFamily = FontFamily(Font(R.font.inria_serif_bold)),
+                        )
+                    )
+                    Text(
+                        text = "Rp. ${items.sumOf { it.price }}",
+                        style = TextStyle(
+                            fontSize = 17.sp,
+                            color = Color.Black,
+                            fontFamily = FontFamily(Font(R.font.inria_serif_bold)),
+                        )
+                    )
+                }
+            } else {
+                Text(
+                    text = "Tidak ada item dalam struk.",
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        fontFamily = FontFamily(Font(R.font.inria_serif_regular)),
+                    )
+                )
+            }
         }
     }
 }
@@ -176,55 +232,6 @@ fun PaymentDetailRow(label: String, value: String) {
         )
     }
     Spacer(modifier = Modifier.height(4.dp))
-}
-
-@Composable
-fun OrderDetailCard(cartList: List<Cart>) {
-    Card(
-        shape = RoundedCornerShape(8.dp),
-        elevation = 4.dp,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Detail Pesanan",
-                style = TextStyle(
-                    fontSize = 22.sp,
-                    color = Color.Black,
-                    fontFamily = FontFamily(Font(R.font.inria_serif_bold)),
-                )
-                )
-            Spacer(modifier = Modifier.height(13.dp))
-
-            LazyColumn {
-                items(cartList) { item ->
-                    OrderDetailRow(item.name, item.date, item.price)
-                }
-            }
-
-            Divider(color = Color.Gray, thickness = 1.dp)
-            Spacer(modifier = Modifier.height(13.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = "Jumlah Pembayaran",
-                    style = TextStyle(
-                        fontSize = 17.sp,
-                        color = Color.Black,
-                        fontFamily = FontFamily(Font(R.font.inria_serif_bold)),
-                    )
-                )
-                Text(text = "Rp. ${cartList.sumOf { it.price }}",
-                    style = TextStyle(
-                        fontSize = 17.sp,
-                        color = Color.Black,
-                        fontFamily = FontFamily(Font(R.font.inria_serif_bold)),
-                    )
-                )
-            }
-        }
-    }
 }
 
 @Composable

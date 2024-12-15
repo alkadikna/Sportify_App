@@ -26,6 +26,7 @@ import com.example.sportify.ui.OrderLayout
 import com.example.sportify.ui.PaymentLayout
 import com.example.sportify.ui.ProfileLayout
 import com.example.sportify.ui.ReceiptLayout
+import com.example.sportify.ui.ReceiptListScreen
 import com.example.sportify.ui.RegisterLayout
 import com.example.sportify.ui.ScheduleLayout
 import com.example.sportify.ui.TestingReadDB
@@ -56,6 +57,14 @@ class MainActivity : ComponentActivity() {
                     composable("booking") { BookingLayout(navCtrl = navController)}
                     composable("profile") { ProfileLayout(navController = navController, auth = auth) }
                     composable("profile/edit") { EditProfileLayout(navCtrl = navController, auth = auth)}
+                    composable("receipt") { ReceiptListScreen(navCtrl = navController, auth = auth) }
+                    composable(
+                        "receipt/{receiptKey}",
+                        arguments = listOf(navArgument("receiptKey") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val receiptKey = backStackEntry.arguments?.getString("receiptKey") ?: ""
+                        ReceiptLayout(navCtrl = navController, auth = Firebase.auth, receiptKey = receiptKey)
+                    }
                     composable (
                         "result/{fieldType}/{start}/{end}/{selectedDate}",
                         arguments = listOf(
@@ -84,11 +93,6 @@ class MainActivity : ComponentActivity() {
                         backStackEntry ->
                         val cartListJson = backStackEntry.arguments?.getString("cartListJson")?: "[]"
                         PaymentLayout(navCtrl = navController, cartListJson = cartListJson)
-                    }
-                    composable("order/{cartListJson}/receipt") {
-                        backStackEntry ->
-                        val cartListJson = backStackEntry.arguments?.getString("cartListJson")?: "[]"
-                        ReceiptLayout(navCrtl = navController ,cartListJson = cartListJson, auth = auth)
                     }
 
 //                    composable("notifikasi"){ NotificationScreen(navCtrl = navController) }
