@@ -24,6 +24,7 @@ Sportify is a digital solution designed to streamline sports venue bookings. Bui
 ## Benefits
 - **For Users:** Simplifies sports field reservations anytime and anywhere.
 - **For Venue Providers:** Optimizes management and operation of venue rentals.
+- ** Currently developing only for user side ! **
 
 ---
 
