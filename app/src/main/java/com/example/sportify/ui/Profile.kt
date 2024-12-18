@@ -141,7 +141,11 @@ fun ProfileLayout(navController: NavController, auth: FirebaseAuth) {
                     title = "Pembayaran",
                     items = listOf(
                         Triple("Opsi Pembayaran", R.drawable.wallet, null),
-                        Triple("Daftar Transaksi", R.drawable.terms_condition, null)
+                        Triple("Daftar Transaksi", R.drawable.terms_condition) {
+                            navController.navigate(
+                                "receipt"
+                            )
+                        }
                     )
                 )
 

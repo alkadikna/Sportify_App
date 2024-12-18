@@ -1,5 +1,6 @@
 package com.example.sportify.ui
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,14 +39,20 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.sportify.R
 import com.example.sportify.Repository.saveOrder
+import com.example.sportify.Repository.saveReceipt
 import com.example.sportify.Repository.updateField
 import com.example.sportify.layout_component.TopSection
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
 
 private lateinit var database: FirebaseDatabase
+private lateinit var auth: FirebaseAuth
 
 @Composable
 fun PaymentLayout(navCtrl: NavController, cartListJson: String) {
@@ -148,10 +155,16 @@ fun PaymentLayout(navCtrl: NavController, cartListJson: String) {
                         label = "Cash Payment",
                         paymentMethod = {
                             updateField(cartList)
-                            val gson = Gson()
-                            val cartListJson = gson.toJson(cartList)
-                            navCtrl.navigate("order/$cartListJson/receipt")
                             cartList.forEach { saveOrder(it) }
+                            saveReceipt(
+                                cartList,
+                                onSuccess = { receiptKey ->
+                                    navCtrl.navigate("receipt/$receiptKey")
+                                },
+                                onError = { error ->
+                                    Log.e("Payment", "Error saving receipt: $error")
+                                }
+                            )
                         }
                     )
                 }
